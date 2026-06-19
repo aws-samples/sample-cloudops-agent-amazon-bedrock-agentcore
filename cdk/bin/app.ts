@@ -15,10 +15,12 @@ const app = new cdk.App();
 // Add CDK-Nag AWS Solutions checks
 Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
 
-// Get configuration from context or environment
+// Get configuration from context or environment.
+// Region is resolved from the CDK CLI (CDK_DEFAULT_REGION, derived from the
+// active AWS profile/credentials) or AWS_REGION — never hard-coded.
 const env = {
   account: process.env.CDK_DEFAULT_ACCOUNT,
-  region: process.env.CDK_DEFAULT_REGION || 'us-east-1',
+  region: process.env.CDK_DEFAULT_REGION || process.env.AWS_REGION,
 };
 
 const adminEmail = process.env.COGNITO_ADMIN_EMAIL || app.node.tryGetContext('adminEmail');

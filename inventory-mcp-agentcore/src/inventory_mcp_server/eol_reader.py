@@ -13,7 +13,12 @@ _CACHE_TTL_SECONDS = int(os.environ.get("EOL_CACHE_TTL", "300"))  # 5 minutes de
 
 
 def _get_table():
-    dynamodb = boto3.resource("dynamodb", region_name=os.environ.get("AWS_REGION", "us-east-1"))
+    region = (
+        os.environ.get("AWS_REGION")
+        or os.environ.get("AWS_DEFAULT_REGION")
+        or boto3.Session().region_name
+    )
+    dynamodb = boto3.resource("dynamodb", region_name=region)
     return dynamodb.Table(os.environ.get("EOL_TABLE_NAME", "aws-eol-schedules"))
 
 

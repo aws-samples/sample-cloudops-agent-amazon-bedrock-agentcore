@@ -95,6 +95,7 @@ export class AgentCoreGatewayStack extends cdk.Stack {
       code: lambda.Code.fromInline(`
 import json
 import logging
+import os
 import urllib.request
 import boto3
 
@@ -127,7 +128,7 @@ def handler(event, context):
     request_type = event['RequestType']
     props = event['ResourceProperties']
     provider_name = props.get('ProviderName', '')
-    region = props.get('Region', 'us-east-1')
+    region = props.get('Region') or os.environ.get('AWS_REGION')
     client = boto3.client('bedrock-agentcore-control', region_name=region)
 
     if request_type == 'Delete':

@@ -55,6 +55,22 @@ as a Lambda on a daily EventBridge schedule and writes results to the
 | OpenSearch / Elasticsearch           | `what-is.html` + `ListVersions` API               | Version ranges (e.g. "1.0 through 1.2") matched to concrete versions |
 | MSK (Kafka)                          | `supported-kafka-versions.html` + API             | Standard support only; extended support is `N/A`                     |
 
+### Scrape Source URLs
+
+The scraper fetches end-of-support dates from the following AWS documentation pages
+(EKS is excluded — it uses the `eks:DescribeClusterVersions` API directly):
+
+| Service           | URL(s)                                                                                                                                                                                               |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RDS MySQL         | https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/MySQL.Concepts.VersionMgmt.html                                                                                                               |
+| Aurora MySQL      | https://docs.aws.amazon.com/AmazonRDS/latest/AuroraMySQLReleaseNotes/AuroraMySQL.release-calendars.html                                                                                              |
+| RDS PostgreSQL    | https://docs.aws.amazon.com/AmazonRDS/latest/PostgreSQLReleaseNotes/postgresql-release-calendar.html<br>https://docs.aws.amazon.com/AmazonRDS/latest/PostgreSQLReleaseNotes/postgresql-versions.html |
+| Aurora PostgreSQL | https://docs.aws.amazon.com/AmazonRDS/latest/AuroraPostgreSQLReleaseNotes/aurorapostgresql-release-calendar.html                                                                                     |
+| RDS MariaDB       | https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/MariaDB.Concepts.VersionMgmt.html                                                                                                             |
+| ElastiCache       | https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/engine-versions.html                                                                                                                         |
+| OpenSearch        | https://docs.aws.amazon.com/opensearch-service/latest/developerguide/what-is.html                                                                                                                    |
+| MSK (Kafka)       | https://docs.aws.amazon.com/msk/latest/developerguide/supported-kafka-versions.html                                                                                                                  |
+
 ### Date Field Semantics
 
 - `end_of_standard_support` – the **RDS/AWS end of standard support date**.
@@ -96,8 +112,12 @@ The sentinel values `Unknown` and `N/A` are preserved and never flagged as inval
 
 ```bash
 cd eol-scraper
-AWS_REGION=us-east-1 EOL_TABLE_NAME=aws-eol-schedules python -m eol_scraper.main
+AWS_REGION=<your-region> EOL_TABLE_NAME=aws-eol-schedules python -m eol_scraper.main
 ```
+
+> Region is read from the `AWS_REGION` (or `AWS_DEFAULT_REGION`) environment
+> variable, falling back to the active AWS profile. It is never hard-coded —
+> the scraper and MCP server run in whatever region is configured.
 
 ## Local Development
 
@@ -121,13 +141,17 @@ MCP_TRANSPORT=streamable-http inventory-mcp-server
 > anonymous pull rate limits (HTTP 429) during CodeBuild.
 
 ```bash
+# Set your target region and account once
+export AWS_REGION=<your-region>
+ACCOUNT=<account>
+
 # Build
 docker build -t inventory-mcp-server .
 
 # Tag and push to ECR
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <account>.dkr.ecr.us-east-1.amazonaws.com
-docker tag inventory-mcp-server:latest <account>.dkr.ecr.us-east-1.amazonaws.com/inventory-mcp-server:latest
-docker push <account>.dkr.ecr.us-east-1.amazonaws.com/inventory-mcp-server:latest
+aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com"
+docker tag inventory-mcp-server:latest "$ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/inventory-mcp-server:latest"
+docker push "$ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/inventory-mcp-server:latest"
 ```
 
 ### 2. Register as AgentCore Runtime MCP Server
@@ -136,11 +160,11 @@ docker push <account>.dkr.ecr.us-east-1.amazonaws.com/inventory-mcp-server:lates
 aws bedrock-agentcore create-mcp-server \
   --name inventory-mcp-server \
   --container-config '{
-    "imageUri": "<account>.dkr.ecr.us-east-1.amazonaws.com/inventory-mcp-server:latest",
+    "imageUri": "<account>.dkr.ecr.<your-region>.amazonaws.com/inventory-mcp-server:latest",
     "port": 8000,
     "environment": {
       "MCP_TRANSPORT": "streamable-http",
-      "AWS_REGION": "us-east-1"
+      "AWS_REGION": "<your-region>"
     }
   }'
 ```
@@ -157,7 +181,7 @@ Configure AgentCore Gateway to route to the MCP server endpoint. The server expo
     "inventory-mcp-server": {
       "command": "inventory-mcp-server",
       "env": {
-        "AWS_REGION": "us-east-1",
+        "AWS_REGION": "<your-region>",
         "AWS_PROFILE": "your-profile"
       }
     }

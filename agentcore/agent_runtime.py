@@ -26,7 +26,7 @@ app = BedrockAgentCoreApp()
 GATEWAY_ARN = os.environ.get('GATEWAY_ARN')
 MEMORY_ID = os.environ.get('MEMORY_ID')
 MODEL_ID = os.environ.get('MODEL_ID', 'us.anthropic.claude-sonnet-4-5-20250929-v1:0')
-AWS_REGION = os.environ.get('AWS_REGION', 'us-east-1')
+AWS_REGION = os.environ.get('AWS_REGION') or boto3.Session().region_name
 
 logger.info(f"Gateway ARN: {GATEWAY_ARN}")
 logger.info(f"Model ID: {MODEL_ID}")

@@ -9,13 +9,13 @@ set -e
 # Target: CodeBuild Amazon Linux 2023
 # Image: aws/codebuild/amazonlinux-x86_64-standard:5.0
 # Privileged: true
-# Region: us-east-1
+# Region: resolved from AWS_REGION env var / AWS CLI profile (not hard-coded)
 # ============================================
 
 # ============================================
 # CONFIGURATION
 # ============================================
-export AWS_REGION="us-east-1"
+export AWS_REGION="${AWS_REGION:-$(aws configure get region 2>/dev/null || true)}"
 EMAIL_ADDRESS="your-email@example.com"
 TIMESTAMP=$(date +%s)
 

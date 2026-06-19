@@ -6,7 +6,11 @@ from .scrapers import eks, rds, elasticache, opensearch, msk
 
 
 def get_region():
-    return os.environ.get("AWS_REGION", "us-east-1")
+    return (
+        os.environ.get("AWS_REGION")
+        or os.environ.get("AWS_DEFAULT_REGION")
+        or boto3.Session().region_name
+    )
 
 
 def get_table_name():

@@ -2,6 +2,11 @@ import { useState } from 'react';
 import type { AppConfig } from '@/types';
 import styles from './ConfigEditor.module.css';
 
+// Default region for the config form. Read from the build-time env var
+// (VITE_AWS_REGION) when provided; otherwise left blank so the user picks it.
+// No region is hard-coded.
+const DEFAULT_REGION = (import.meta.env.VITE_AWS_REGION as string | undefined) || '';
+
 function loadExistingConfig(): AppConfig | null {
   try {
     const raw = localStorage.getItem('appConfig');
@@ -19,12 +24,12 @@ export function ConfigEditor({ onClose }: { onClose?: () => void }) {
   const [userPoolId, setUserPoolId] = useState(existing?.cognito?.userPoolId || '');
   const [userPoolClientId, setUserPoolClientId] = useState(existing?.cognito?.userPoolClientId || '');
   const [identityPoolId, setIdentityPoolId] = useState(existing?.cognito?.identityPoolId || '');
-  const [cognitoRegion, setCognitoRegion] = useState(existing?.cognito?.region || 'us-east-1');
+  const [cognitoRegion, setCognitoRegion] = useState(existing?.cognito?.region || DEFAULT_REGION);
 
   // AgentCore fields
   const [acAgentName, setAcAgentName] = useState(existing?.agentcore?.agentName || 'CloudOps Agent');
   const [acAgentArn, setAcAgentArn] = useState(existing?.agentcore?.agentArn || '');
-  const [acRegion, setAcRegion] = useState(existing?.agentcore?.region || 'us-east-1');
+  const [acRegion, setAcRegion] = useState(existing?.agentcore?.region || DEFAULT_REGION);
 
   // Conversation API
   const [conversationApiEndpoint, setConversationApiEndpoint] = useState(existing?.conversationApi?.endpoint || '');
@@ -47,7 +52,7 @@ export function ConfigEditor({ onClose }: { onClose?: () => void }) {
       },
       agentcore: {
         enabled: true,
-        region: acRegion.trim() || 'us-east-1',
+        region: acRegion.trim() || cognitoRegion.trim(),
         agentArn: acAgentArn.trim(),
         agentName: acAgentName.trim() || undefined,
       },

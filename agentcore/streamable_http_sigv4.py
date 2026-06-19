@@ -43,7 +43,7 @@ async def streamablehttp_client_with_sigv4(
     url: str,
     credentials: ReadOnlyCredentials,
     service: str = "bedrock-agentcore",
-    region: str = "us-east-1",
+    region: str | None = None,
     timeout: float = 30.0
 ):
     """

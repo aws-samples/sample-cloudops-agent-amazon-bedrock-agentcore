@@ -10,7 +10,10 @@ set -e
 # ============================================
 # CONFIGURATION
 # ============================================
-AWS_REGION="${AWS_REGION:-us-east-1}"
+# Region is resolved from the AWS_REGION env var or the active AWS CLI
+# profile (`aws configure get region`). It is never hard-coded; if neither
+# is set, the script prompts for it below.
+AWS_REGION="${AWS_REGION:-$(aws configure get region 2>/dev/null || true)}"
 COGNITO_ADMIN_EMAIL="${COGNITO_ADMIN_EMAIL:-}"
 
 # ============================================
