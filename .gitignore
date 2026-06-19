@@ -24,3 +24,6 @@ __pycache__/
 
 # CDK
 cdk.context.json
+
+# Kiro IDE workspace (specs, skills, settings) — not published to git
+.kiro/
