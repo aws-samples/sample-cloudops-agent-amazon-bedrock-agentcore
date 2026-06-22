@@ -272,6 +272,20 @@ Deploy via `npx cdk deploy --all` from the `cdk/` directory. Six stacks are prov
 5. **AgentRuntimeStack** — Main Strands agent with Gateway integration and AgentCore Memory
 6. **ConversationHistoryStack** — DynamoDB table + API Gateway + Lambda for conversation persistence
 
+### Populate the EOL data (one-time, required)
+
+The Inventory tools read end-of-support dates from the `aws-eol-schedules` DynamoDB table, which is filled by the **EOL scraper Lambda**. The scraper is scheduled to run **once per day**, so the table is empty until that first scheduled run. Invoke it once manually right after deploying so Inventory EOL lookups work immediately:
+
+```bash
+# Function name is published as the CloudOpsMCPRuntimeStack "EolScraperFunctionName" output
+aws lambda invoke \
+  --region <region> \
+  --function-name CloudOpsMCPRuntimeStack-EolScraper \
+  /dev/stdout
+```
+
+A `200` status means the table was populated; the daily schedule keeps it current thereafter.
+
 ### Frontend
 
 ```bash
@@ -289,10 +303,10 @@ After deploying both backend and frontend:
 
 1. Open the Amplify app URL
 2. On first load, the Settings screen appears
-3. Configure:
+3. Configure the values below. The easiest path is the **`FrontEndConfig`** output of `CloudOpsConversationHistoryStack` — a ready-made JSON `appConfig` that already contains every value (Cognito, AgentCore ARN, and the Conversation API URL), assembled from all stacks. Paste it directly. Individual values are also available as discrete outputs on the same stack:
    - **Amazon Cognito**: User Pool ID, User Pool Client ID, Identity Pool ID, Region
    - **AgentCore**: Agent Name, AgentCore Runtime ARN, Region
-   - **Conversation History API**: API Gateway endpoint URL (from ConversationHistoryStack output)
+   - **Conversation History API**: API Gateway endpoint URL (`ConversationApiUrl` output)
 4. Save — the app reloads with authentication enabled
 
 ## Inventory MCP Server
@@ -330,13 +344,34 @@ export COGNITO_ADMIN_EMAIL="your-email@example.com"
 cd cdk && npm install && npm run build
 npx cdk deploy --all --require-approval never
 
+# Populate the EOL data (one-time, see "Populate the EOL data" below)
+aws lambda invoke --region <region> \
+  --function-name CloudOpsMCPRuntimeStack-EolScraper /dev/stdout
+
 # Build and deploy frontend
 cd ../frontend && npm install && npm run build && npm run zip
 # Upload cloudops-frontend.zip to AWS Amplify Hosting
 
 # Sign in with admin + temporary password from email
-# Configure settings with stack outputs
+# Configure settings: paste the CloudOpsConversationHistoryStack "FrontEndConfig"
+# output (a ready-made JSON appConfig) into the app's configuration
 ```
+
+### Populate the EOL data (one-time, required)
+
+The Inventory tools enrich clusters with end-of-support dates read from the `aws-eol-schedules` DynamoDB table. That table is filled by the **EOL scraper Lambda**, which is wired to an EventBridge rule that runs **once per day** — so immediately after the first deploy the table is empty and EOL lookups return nothing until the schedule fires.
+
+Invoke the scraper once, manually, to populate the table right away. The function name is published as the `EolScraperFunctionName` output of `CloudOpsMCPRuntimeStack`:
+
+```bash
+# Function name comes from the CloudOpsMCPRuntimeStack "EolScraperFunctionName" output
+aws lambda invoke \
+  --region <region> \
+  --function-name CloudOpsMCPRuntimeStack-EolScraper \
+  /dev/stdout
+```
+
+A successful run returns `"StatusCode": 200` and writes the EOL schedules to the table; after that the daily schedule keeps the data fresh automatically. (If you supplied an existing table via `EOL_TABLE_NAME`/context, the scraper writes to that table instead.)
 
 The bootstrap `admin` user is automatically added to the `Administrators` group, so it resolves to the **Admin** role (all tool categories). To test the **Non-Admin** experience, create a user that is not in `Administrators`:
 

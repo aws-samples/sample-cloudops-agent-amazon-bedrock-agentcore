@@ -610,6 +610,16 @@ export class MCPRuntimeStack extends cdk.Stack {
     // Outputs
     // ========================================
 
+    // The EOL scraper runs on a DAILY schedule, so the EOL table is EMPTY until
+    // the first scheduled run. After deployment, invoke it once manually to
+    // populate the table immediately (see README "Populate the EOL data").
+    new cdk.CfnOutput(this, 'EolScraperFunctionName', {
+      value: eolScraperFunction.functionName,
+      description: 'EOL scraper Lambda — invoke once after deploy to populate the EOL table: ' +
+        `aws lambda invoke --function-name ${eolScraperFunction.functionName} --region ${this.region} /dev/stdout`,
+      exportName: `${this.stackName}-EolScraperFunctionName`,
+    });
+
     new cdk.CfnOutput(this, 'BillingMcpRuntimeArn', {
       value: this.billingMcpRuntimeArn,
       description: 'Billing MCP Server Runtime ARN',
