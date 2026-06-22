@@ -34,6 +34,9 @@ export class ConversationHistoryStack extends cdk.Stack {
       sortKey: { name: 'conversationId', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
+      // Continuous backups (clears AwsSolutions-DDB3 and protects conversation
+      // data against accidental loss; restorable to any second in the last 35 days).
+      pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true },
     });
 
     // ========================================
