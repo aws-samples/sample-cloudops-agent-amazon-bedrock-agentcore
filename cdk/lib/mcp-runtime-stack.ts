@@ -624,8 +624,12 @@ export class MCPRuntimeStack extends cdk.Stack {
     // populate the table immediately (see README "Populate the EOL data").
     new cdk.CfnOutput(this, 'EolScraperFunctionName', {
       value: eolScraperFunction.functionName,
-      description: 'EOL scraper Lambda — invoke once after deploy to populate the EOL table: ' +
-        `aws lambda invoke --function-name ${eolScraperFunction.functionName} --region ${this.region} /dev/stdout`,
+      // NOTE: an Output Description must be a literal string — do NOT interpolate
+      // CDK tokens (e.g. functionName/region) here, or CloudFormation renders it
+      // as an Fn::Join and rejects the template ("Every Description member must
+      // be a string"). The function name is carried in `value`; invoke with:
+      //   aws lambda invoke --function-name <value> --region <region> /dev/stdout
+      description: 'EOL scraper Lambda name — invoke once after deploy to populate the EOL table (see README).',
       exportName: `${this.stackName}-EolScraperFunctionName`,
     });
 
