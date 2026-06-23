@@ -558,21 +558,27 @@ export class MCPRuntimeStack extends cdk.Stack {
           ],
           local: {
             tryBundle(outputDir: string) {
-              const { execSync } = require('child_process');
+              // Use execFileSync with an explicit argument vector (NOT a shell
+              // string) so no shell is spawned and there is no command-injection
+              // surface — inputs are CDK-controlled build paths regardless.
+              // --no-warn-conflicts silences pip's "dependency resolver does not
+              // currently take into account..." notice (triggered by unrelated
+              // packages in the host Python env, not the scraper's deps).
+              const { execFileSync } = require('child_process');
+              const fs = require('fs');
               try {
-                // `outputDir` is supplied by the CDK asset-bundling framework
-                // (a controlled temp staging path), and `eolScraperPath` is a
-                // fixed compile-time path.join — neither is user-controllable,
-                // so there is no command-injection surface here.
-                // --no-warn-conflicts silences pip's "dependency resolver does
-                // not currently take into account..." notice, which is triggered
-                // by pre-existing packages in the host Python env (strands-agents,
-                // awscli, etc.) — NOT by the scraper's own requirements. The
-                // install into outputDir is isolated and unaffected.
-                // nosemgrep: javascript.lang.security.detect-child-process
-                execSync(`pip install -r ${eolScraperPath}/requirements.txt -t ${outputDir} --quiet --no-warn-conflicts`);
-                // nosemgrep: javascript.lang.security.detect-child-process
-                execSync(`cp -r ${eolScraperPath}/eol_scraper ${outputDir}/`);
+                execFileSync(
+                  'python3',
+                  [
+                    '-m', 'pip', 'install',
+                    '-r', `${eolScraperPath}/requirements.txt`,
+                    '-t', outputDir,
+                    '--quiet', '--no-warn-conflicts',
+                  ],
+                  { stdio: 'ignore' },
+                );
+                // Copy the package source with the Node fs API — no subprocess.
+                fs.cpSync(`${eolScraperPath}/eol_scraper`, `${outputDir}/eol_scraper`, { recursive: true });
                 return true;
               } catch {
                 return false;

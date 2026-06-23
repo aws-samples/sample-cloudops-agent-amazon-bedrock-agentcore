@@ -346,7 +346,7 @@ class TestBuildMcpClientForToken:
         transport = client.transport_factory()
         tag, url, forwarded_token = transport
         assert tag == _BEARER_TAG
-        assert forwarded_token == "user-jwt-123"
+        assert forwarded_token == "user-jwt-123"  # nosec B105 - fake test fixture token
         assert url == agent_runtime.gateway_endpoint
 
     def test_missing_token_falls_back_to_sigv4_so_gateway_is_still_called(self):
