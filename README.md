@@ -426,6 +426,10 @@ Then delete the Frontend UI running on Amplify Hosting:
 1. Go to **AWS Amplify** → select your app
 2. Click **Actions** → **Delete app**
 
-## Author
+## Disclaimer
 
-- **Nipon Maluengnont** — Technical Account Manager, AWS Enterprise Support
+This repository provides sample code for educational and demonstration purposes only. It is not intended for direct production use without proper review, testing, and validation. Always test generated infrastructure artifacts (Terraform, Helm charts, kubectl commands) in non-production environments first. Use at your own risk — the authors are not responsible for any issues, damages, or losses that may result from using this code in production.
+
+## License
+
+This project is licensed under the MIT-0 License. See the LICENSE file.
