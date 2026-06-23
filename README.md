@@ -272,6 +272,21 @@ Deploy via `npx cdk deploy --all` from the `cdk/` directory. Six stacks are prov
 5. **AgentRuntimeStack** — Main Strands agent with Gateway integration and AgentCore Memory
 6. **ConversationHistoryStack** — DynamoDB table + API Gateway + Lambda for conversation persistence
 
+### Choosing the Bedrock model
+
+The agent's model is configurable at deploy time — you do **not** need to edit the stack. Set it via an environment variable or CDK context before deploying:
+
+```bash
+# Environment variable (defaults to Claude Sonnet 4.5 if unset)
+export BEDROCK_MODEL_ID="us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+npx cdk deploy --all --require-approval never
+
+# …or CDK context
+npx cdk deploy --all -c modelId="us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+```
+
+The value accepts a Bedrock model id or a cross-region **inference profile** id (e.g. `us.anthropic.claude-...`). It is the single source of truth: it flows to the agent runtime as the `MODEL_ID` environment variable **and** scopes the runtime's Bedrock IAM permissions to that model (the underlying foundation model behind an inference profile is derived automatically). Ensure Bedrock **model access** is enabled for the chosen model in your account and region before deploying.
+
 ### Populate the EOL data (one-time, required)
 
 The Inventory tools read end-of-support dates from the `aws-eol-schedules` DynamoDB table, which is filled by the **EOL scraper Lambda**. The scraper is scheduled to run **once per day**, so the table is empty until that first scheduled run. Invoke it once manually right after deploying so Inventory EOL lookups work immediately:
@@ -331,7 +346,7 @@ Each tool enriches live AWS API data with end-of-support schedules from a Dynamo
 - Python 3.12+
 - AWS CLI v2 configured with credentials
 - AWS CDK v2 (`npm install -g aws-cdk`)
-- Amazon Bedrock model access enabled (Claude Sonnet)
+- Amazon Bedrock model access enabled for the model you deploy (Claude Sonnet 4.5 by default; see "Choosing the Bedrock model")
 
 ## Quick Start
 
@@ -341,6 +356,9 @@ cd cloudops-agent
 
 # Deploy backend
 export COGNITO_ADMIN_EMAIL="your-email@example.com"
+# Optional: choose the Bedrock model the agent runs on (defaults to Claude Sonnet 4.5).
+# Use a Bedrock model id or a cross-region inference profile id.
+export BEDROCK_MODEL_ID="us.anthropic.claude-sonnet-4-5-20250929-v1:0"
 cd cdk && npm install && npm run build
 npx cdk deploy --all --require-approval never
 

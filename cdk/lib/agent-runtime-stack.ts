@@ -9,6 +9,10 @@ export interface AgentRuntimeStackProps extends cdk.StackProps {
   repository: ecr.IRepository;
   userPoolArn: string;
   gatewayArn: string; // Gateway ARN from AgentCoreGatewayStack
+  // Bedrock model id the agent runs on (Bedrock model id or cross-region
+  // inference profile id). Configurable at deploy time via BEDROCK_MODEL_ID /
+  // `-c modelId=...`; see bin/app.ts.
+  foundationModelId: string;
   // For frontend configuration outputs
   userPoolId: string;
   userPoolClientId: string;
@@ -24,7 +28,18 @@ export class AgentRuntimeStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: AgentRuntimeStackProps) {
     super(scope, id, props);
 
-    const foundationModel = 'us.anthropic.claude-sonnet-4-5-20250929-v1:0';
+    // Model id is supplied by the app (env var / context) — no longer hardcoded.
+    const foundationModel = props.foundationModelId;
+
+    // A cross-region inference profile id (e.g. "us.anthropic.claude-...") wraps
+    // an underlying foundation model ("anthropic.claude-..."). Both ARNs are
+    // needed in the IAM policy: the inference-profile ARN and the underlying
+    // foundation-model ARN. Strip a known geo prefix to derive the base model.
+    const inferenceProfilePrefixes = ['us', 'eu', 'apac', 'us-gov'];
+    const firstSegment = foundationModel.split('.')[0];
+    const baseFoundationModel = inferenceProfilePrefixes.includes(firstSegment)
+      ? foundationModel.substring(firstSegment.length + 1)
+      : foundationModel;
 
     // ========================================
     // IAM Roles
@@ -70,11 +85,14 @@ export class AgentRuntimeStack extends cdk.Stack {
         'bedrock:ConverseStream',
         'bedrock:Converse',
       ],
-      resources: [
+      resources: Array.from(new Set([
         `arn:aws:bedrock:*::foundation-model/${foundationModel}`,
-        `arn:aws:bedrock:*::foundation-model/anthropic.claude-sonnet-4-5-20250929-v1:0`,
+        `arn:aws:bedrock:*::foundation-model/${baseFoundationModel}`,
         `arn:aws:bedrock:*:${this.account}:inference-profile/${foundationModel}`,
-      ],
+        // Cross-region inference profiles fan out to per-region foundation
+        // models, so allow the underlying model in any region too.
+        `arn:aws:bedrock:*:${this.account}:inference-profile/${baseFoundationModel}`,
+      ])),
     }));
 
     // Add Memory permissions to Main Runtime

@@ -6,6 +6,7 @@ export interface AgentRuntimeStackProps extends cdk.StackProps {
     repository: ecr.IRepository;
     userPoolArn: string;
     gatewayArn: string;
+    foundationModelId: string;
     userPoolId: string;
     userPoolClientId: string;
     identityPoolId: string;

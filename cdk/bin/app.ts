@@ -26,6 +26,16 @@ const env = {
 const adminEmail = process.env.COGNITO_ADMIN_EMAIL || app.node.tryGetContext('adminEmail');
 const eolTableName = process.env.EOL_TABLE_NAME || app.node.tryGetContext('eolTableName');
 
+// Bedrock model the agent runs on. Configurable at deploy time without editing
+// the stack: set BEDROCK_MODEL_ID or pass `-c modelId=...`. Defaults to the
+// Claude Sonnet 4.5 cross-region inference profile. The value flows to the
+// runtime container (MODEL_ID env var) and scopes the runtime's Bedrock IAM
+// permissions in AgentRuntimeStack.
+const foundationModelId =
+  process.env.BEDROCK_MODEL_ID ||
+  app.node.tryGetContext('modelId') ||
+  'us.anthropic.claude-sonnet-4-5-20250929-v1:0';
+
 if (!adminEmail) {
   console.error('\n❌ ERROR: COGNITO_ADMIN_EMAIL environment variable is required.');
   console.error('Please set it before deploying:');
@@ -98,6 +108,7 @@ const agentRuntimeStack = new AgentRuntimeStack(app, 'CloudOpsAgentRuntimeStack'
   repository: imageStack.repository,
   userPoolArn: authStack.userPoolArn,
   gatewayArn: agentCoreGatewayStack.gatewayArn,
+  foundationModelId: foundationModelId,
   userPoolId: authStack.userPoolId,
   userPoolClientId: authStack.userPoolClientId,
   identityPoolId: authStack.identityPoolId,
