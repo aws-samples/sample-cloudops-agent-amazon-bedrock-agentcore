@@ -13,8 +13,10 @@ Provides tools to query EKS, RDS, OpenSearch, ElastiCache, and MSK clusters
 with version info, status, end-of-support schedules, and more.""",
 )
 
-# Configure for AgentCore streamable-http transport
-mcp.settings.host = '0.0.0.0'
+# Configure for AgentCore streamable-http transport.
+# Intentional in-container bind (server runs inside an isolated AgentCore
+# Runtime container, not exposed directly to the internet).
+mcp.settings.host = '0.0.0.0'  # nosec B104 - intentional in-container bind, fronted by AgentCore Runtime
 mcp.settings.port = 8000
 mcp.settings.stateless_http = True
 mcp.settings.transport_security = None

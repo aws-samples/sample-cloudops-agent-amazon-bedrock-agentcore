@@ -82,7 +82,7 @@ def get_current_date_utc() -> str:
 # Dedicated payload field carrying the user's Cognito token. The role is NEVER
 # read from the payload — only the verified JWT claims at the Gateway determine
 # the role. We forward the token unmodified and let the Gateway derive the role.
-USER_TOKEN_PAYLOAD_FIELD = "accessToken"
+USER_TOKEN_PAYLOAD_FIELD = "accessToken"  # nosec B105 - JSON field name, not a credential
 
 
 def resolve_user_token(payload: dict, context=None) -> Optional[str]:

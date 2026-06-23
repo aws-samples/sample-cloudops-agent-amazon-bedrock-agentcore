@@ -99,7 +99,8 @@ def scrape_msk() -> list[dict]:
 def main():
     transport = os.environ.get("MCP_TRANSPORT", "stdio")
     if transport == "streamable-http":
-        mcp.run(transport="streamable-http", host="0.0.0.0", port=8001)
+        # Intentional in-container bind, fronted by AgentCore Runtime (not exposed directly).
+        mcp.run(transport="streamable-http", host="0.0.0.0", port=8001)  # nosec B104
     else:
         mcp.run(transport="stdio")
 

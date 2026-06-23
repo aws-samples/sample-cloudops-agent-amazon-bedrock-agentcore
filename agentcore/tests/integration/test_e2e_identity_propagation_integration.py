@@ -118,7 +118,7 @@ if _AGENTCORE_ROOT not in sys.path:
 # The dedicated payload field the deployed runtime reads the user's Cognito
 # token from (Task 6.1: USER_TOKEN_PAYLOAD_FIELD). Forwarding the token here is
 # precisely what the FrontEnd does, so this drives the full FE->RT->GW path.
-USER_TOKEN_PAYLOAD_FIELD = "accessToken"
+USER_TOKEN_PAYLOAD_FIELD = "accessToken"  # nosec B105 - JSON field name, not a credential
 
 # A prompt that requires an ADMIN-ONLY category (cloudwatch is admin-only and is
 # denied for non-admins per the Cedar policy / ALLOWED mapping). The same prompt

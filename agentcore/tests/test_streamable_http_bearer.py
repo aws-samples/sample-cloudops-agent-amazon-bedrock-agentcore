@@ -98,7 +98,7 @@ def _run_client(url: str, token: str, timeout: float = 30.0):
 
 def test_authorization_header_is_bearer_token():
     """The ``Authorization`` header equals exactly ``f"Bearer {token}"``."""
-    token = "eyJhbGciOiJ.payload.signature"
+    token = "eyJhbGciOiJ.payload.signature"  # nosec B105 - fake test fixture token, not a real credential
     captured, _ = _run_client("https://gw.example/mcp", token)
 
     headers = captured["kwargs"]["headers"]
@@ -109,7 +109,7 @@ def test_token_forwarded_byte_for_byte_unmodified():
     """The token after the ``Bearer `` prefix is the exact token, unmodified."""
     # A token containing characters that a careless implementation might trim
     # or normalize (leading/trailing whitespace, dots, dashes, underscores).
-    token = "  Ab1._-token-with.edges  "
+    token = "  Ab1._-token-with.edges  "  # nosec B105 - fake test fixture token, not a real credential
     captured, _ = _run_client("https://gw.example/mcp", token)
 
     header_value = captured["kwargs"]["headers"]["Authorization"]
@@ -122,7 +122,7 @@ def test_token_forwarded_byte_for_byte_unmodified():
     "token",
     [
         "simple-token",
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiJ9.sig",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiJ9.sig",  # nosemgrep: generic.secrets.security.detected-jwt-token - fake test fixture JWT
         "token.with.many.dots",
         "UPPER_lower-1234567890",
         "x",  # single character
@@ -137,7 +137,7 @@ def test_authorization_header_for_various_tokens(token):
 
 def test_only_authorization_header_is_added():
     """The transport contributes exactly the single ``Authorization`` header."""
-    token = "abc123"
+    token = "abc123"  # nosec B105 - fake test fixture token, not a real credential
     captured, _ = _run_client("https://gw.example/mcp", token)
 
     headers = captured["kwargs"]["headers"]

@@ -44,7 +44,9 @@ def send_cfn_response(event, status, data=None, reason=None):
         headers={'Content-Type': ''},
         method='PUT',
     )
-    urllib.request.urlopen(req)
+    # The URL is the CloudFormation-provided pre-signed S3 response URL and is
+    # validated above to be https:// (no file:/custom schemes possible).
+    urllib.request.urlopen(req)  # nosec B310 - scheme validated to https above
 
 
 def handler(event, context):

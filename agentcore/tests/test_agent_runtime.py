@@ -187,8 +187,8 @@ def _stubbed_sys_modules():
 
     class _FakeCreds:
         access_key = "AKIAFAKE"
-        secret_key = "fakesecret"
-        token = "fakesessiontoken"
+        secret_key = "fakesecret"  # nosec B105 - fake test credential, not a real secret
+        token = "fakesessiontoken"  # nosec B105 - fake test credential, not a real secret
 
     class _FakeSession:
         region_name = "us-east-1"
@@ -273,7 +273,7 @@ class TestResolveUserToken:
 
     def test_payload_access_token_is_returned(self):
         """A payload carrying ``accessToken`` resolves to that exact token."""
-        token = "eyJhbGciOiJIUzI1NiJ9.payload.sig"
+        token = "eyJhbGciOiJIUzI1NiJ9.payload.sig"  # nosec B105 - fake test fixture token
         assert agent_runtime.resolve_user_token({"accessToken": token}) == token
 
     def test_missing_token_returns_none(self):
@@ -287,12 +287,12 @@ class TestResolveUserToken:
 
     def test_falls_back_to_inbound_jwt_context(self):
         """With no payload field, the runtime's inbound JWT context is used."""
-        _FakeWorkloadContext.workload_token = "context-jwt-token"
+        _FakeWorkloadContext.workload_token = "context-jwt-token"  # nosec B105 - fake test fixture token
         assert agent_runtime.resolve_user_token({}) == "context-jwt-token"
 
     def test_payload_field_takes_precedence_over_context(self):
         """The dedicated payload field wins over the inbound context token."""
-        _FakeWorkloadContext.workload_token = "context-jwt-token"
+        _FakeWorkloadContext.workload_token = "context-jwt-token"  # nosec B105 - fake test fixture token
         assert (
             agent_runtime.resolve_user_token({"accessToken": "payload-token"})
             == "payload-token"
@@ -323,7 +323,7 @@ class TestResolveUserToken:
         """A non-dict payload does not raise; it falls through to the context."""
         _FakeWorkloadContext.workload_token = None
         assert agent_runtime.resolve_user_token(None) is None
-        _FakeWorkloadContext.workload_token = "ctx"
+        _FakeWorkloadContext.workload_token = "ctx"  # nosec B105 - fake test fixture token
         assert agent_runtime.resolve_user_token(None) == "ctx"
 
 
@@ -342,7 +342,7 @@ class TestBuildMcpClientForToken:
 
     def test_token_present_uses_bearer_transport_and_forwards_token(self):
         """With a token, the client uses the Bearer transport with that token."""
-        client = agent_runtime.build_mcp_client_for_token("user-jwt-123")
+        client = agent_runtime.build_mcp_client_for_token("user-jwt-123")  # nosec B105 - fake test fixture token
         transport = client.transport_factory()
         tag, url, forwarded_token = transport
         assert tag == _BEARER_TAG
