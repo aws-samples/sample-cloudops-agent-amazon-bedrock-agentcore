@@ -42,13 +42,11 @@ export class MCPRuntimeStack extends cdk.Stack {
 
     // Billing MCP Server Runtime Role
     const billingMcpRuntimeRole = new iam.Role(this, 'BillingMcpRuntimeRole', {
-      roleName: `${this.stackName}-BillingMcpRuntimeRole`,
       assumedBy: new iam.ServicePrincipal('bedrock-agentcore.amazonaws.com'),
     });
 
     // Pricing MCP Server Runtime Role
     const pricingMcpRuntimeRole = new iam.Role(this, 'PricingMcpRuntimeRole', {
-      roleName: `${this.stackName}-PricingMcpRuntimeRole`,
       assumedBy: new iam.ServicePrincipal('bedrock-agentcore.amazonaws.com'),
     });
 
@@ -252,7 +250,6 @@ export class MCPRuntimeStack extends cdk.Stack {
 
     // CloudWatch MCP Server Runtime Role
     const cloudwatchMcpRuntimeRole = new iam.Role(this, 'CloudWatchMcpRuntimeRole', {
-      roleName: `${this.stackName}-CloudWatchMcpRuntimeRole`,
       assumedBy: new iam.ServicePrincipal('bedrock-agentcore.amazonaws.com'),
     });
 
@@ -331,7 +328,6 @@ export class MCPRuntimeStack extends cdk.Stack {
 
     // CloudTrail MCP Server Runtime Role
     const cloudtrailMcpRuntimeRole = new iam.Role(this, 'CloudTrailMcpRuntimeRole', {
-      roleName: `${this.stackName}-CloudTrailMcpRuntimeRole`,
       assumedBy: new iam.ServicePrincipal('bedrock-agentcore.amazonaws.com'),
     });
 
@@ -434,7 +430,6 @@ export class MCPRuntimeStack extends cdk.Stack {
 
     // Inventory MCP Server Runtime Role
     const inventoryMcpRuntimeRole = new iam.Role(this, 'InventoryMcpRuntimeRole', {
-      roleName: `${this.stackName}-InventoryMcpRuntimeRole`,
       assumedBy: new iam.ServicePrincipal('bedrock-agentcore.amazonaws.com'),
     });
 

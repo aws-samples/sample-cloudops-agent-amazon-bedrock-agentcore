@@ -84,6 +84,72 @@ def get_current_date_utc() -> str:
 # the role. We forward the token unmodified and let the Gateway derive the role.
 USER_TOKEN_PAYLOAD_FIELD = "accessToken"  # nosec B105 - JSON field name, not a credential
 
+# Sentinel that replaces any token-bearing value when a payload/body/header
+# collection is routed through redaction. The Raw_Token must never reach any log
+# output, in whole or in any substring (Req 7.1), so we substitute this marker
+# rather than truncating (a prefix/suffix would still leak a substring).
+REDACTED_PLACEHOLDER = "***REDACTED***"  # nosec B105 - mask marker, not a credential
+
+# Names whose VALUES carry the Raw_Token and must be masked before any
+# payload/body/header collection is logged (Req 7.6, 8.4):
+#   - ``accessToken``  : the request-body field carrying the user's Cognito token
+#                        on the FrontEnd -> Agent_Runtime hop (Req 8.1).
+#   - ``Authorization``: the Bearer header carrying the token on the
+#                        Agent_Runtime -> Gateway hop (Req 8.2). Matched
+#                        case-insensitively because HTTP header casing is not
+#                        stable across layers.
+_SENSITIVE_EXACT_KEYS = frozenset({USER_TOKEN_PAYLOAD_FIELD})
+_SENSITIVE_LOWER_KEYS = frozenset({"authorization"})
+
+
+def redact_sensitive(obj):
+    """Return a copy of ``obj`` with token-bearing values masked for logging.
+
+    This is the SINGLE place any payload, request body, or header collection
+    MUST be routed through before it is written to a log. It masks:
+
+      - the ``accessToken`` field value (the user's Cognito token forwarded in
+        the request body on the FrontEnd -> Agent_Runtime hop, Req 8.1/8.4), and
+      - the ``Authorization`` header value (the Bearer credential on the
+        Agent_Runtime -> Gateway hop, Req 8.2),
+
+    replacing each with ``REDACTED_PLACEHOLDER`` while leaving every
+    non-sensitive field intact (Req 7.6). Nested dicts and lists/tuples are
+    walked recursively so a token nested anywhere in the structure is still
+    masked.
+
+    The helper is defensive by contract and NEVER raises on unexpected shapes:
+    any value that is not a dict/list/tuple is returned unchanged, a key whose
+    name matches a sensitive field has its value masked regardless of the
+    value's type, and any unexpected error during the walk collapses to the
+    redaction marker. This guarantees the Raw_Token cannot survive a log call
+    that routes its argument through this helper (Req 7.1).
+
+    NOTE: the runtime does not currently log raw payloads/bodies/headers at all
+    (the no-log posture below is the primary control). This helper exists so
+    that any future diagnostic that needs to log such a collection has one
+    correct, token-safe path to route through rather than logging it raw.
+    """
+    try:
+        if isinstance(obj, dict):
+            redacted = {}
+            for key, value in obj.items():
+                is_sensitive = (
+                    key in _SENSITIVE_EXACT_KEYS
+                    or (isinstance(key, str) and key.lower() in _SENSITIVE_LOWER_KEYS)
+                )
+                redacted[key] = (
+                    REDACTED_PLACEHOLDER if is_sensitive else redact_sensitive(value)
+                )
+            return redacted
+        if isinstance(obj, list):
+            return [redact_sensitive(item) for item in obj]
+        if isinstance(obj, tuple):
+            return tuple(redact_sensitive(item) for item in obj)
+    except Exception:  # pragma: no cover - defensive: redaction must never raise
+        return REDACTED_PLACEHOLDER
+    return obj
+
 
 def resolve_user_token(payload: dict, context=None) -> Optional[str]:
     """Resolve the user's Cognito JWT from the inbound request.
@@ -92,18 +158,28 @@ def resolve_user_token(payload: dict, context=None) -> Optional[str]:
     role value from the payload. Resolution order:
 
     1. A dedicated payload field (``accessToken``) carrying the user's Cognito
-       token forwarded by the FrontEnd.
+       token forwarded by the FrontEnd (the FrontEnd -> Agent_Runtime hop-1
+       transport, Req 8.1).
     2. The runtime's own inbound JWT context (the ``WorkloadAccessToken`` the
        Gateway/runtime extracts from the inbound request headers), exposed via
        ``BedrockAgentCoreContext.get_workload_access_token()``.
 
-    Returns the token string if one resolves, otherwise ``None``. When ``None``
-    is returned the caller still invokes the Gateway; the Gateway applies the
-    NonAdmin role by default (Req 7.4).
+    Returns the token string if one resolves, otherwise ``None``.
 
-    NOTE: This function deliberately does not read any ``role``/``Role`` field
-    from the payload. Role must come only from the verified token claims at the
-    Gateway (Req 1.5).
+    Fail-closed posture (Req 5.1, 5.2, 5.5): when ``None`` is returned the
+    caller STILL invokes the Gateway — it does not block the request. With no
+    user token, ``build_mcp_client_for_token(None)`` selects the SigV4 fallback
+    transport (the runtime's own IAM principal), the request reaches the Gateway
+    with NO Verified_JWT, and the Gateway applies the NonAdmin role by default
+    for both discovery and invocation. This is the intentional, explicit
+    fail-closed default — a token-less request is treated as the least-
+    privileged role, never escalated.
+
+    This function deliberately does not read any ``role``/``Role`` field from
+    the payload, and the runtime NEVER escalates a token-less request to Admin
+    based on payload content (Req 5.5). Role must come only from the verified
+    token claims at the Gateway. Any identity diagnostic references only the
+    verified JWT ``sub`` claim, never the Raw_Token (Req 7.1, 7.4).
     """
     # 1. Dedicated payload field forwarded by the FrontEnd.
     token = payload.get(USER_TOKEN_PAYLOAD_FIELD) if isinstance(payload, dict) else None
@@ -129,18 +205,30 @@ def resolve_user_token(payload: dict, context=None) -> Optional[str]:
 def build_mcp_client_for_token(token: Optional[str]) -> MCPClient:
     """Create a per-request MCP client for the resolved user identity.
 
-    When a user token is present, the client uses the Bearer transport that
-    forwards the user's Cognito JWT unmodified to the Gateway, so the Gateway
-    can derive the user's role from verified JWT claims (Req 7.2, 7.3).
+    Hop-2 transport selection (Agent_Runtime -> AgentCore_Gateway):
 
-    When no token resolves, the client falls back to the SigV4 transport (the
-    runtime's own IAM principal) so the Gateway is still called rather than the
-    request being blocked; the Gateway applies the NonAdmin role by default
-    (Req 7.4). The SigV4 path is retained only as an incremental-migration
-    fallback — the primary path for user requests forwards the user JWT.
+    - When a user token is present, the client uses the Bearer transport
+      (``streamable_http_bearer.py``) that forwards the user's Cognito JWT
+      unmodified as an ``Authorization: Bearer <token>`` header, so the Gateway
+      derives the user's role from verified JWT claims (Req 8.2). The token is
+      conveyed in the ``Authorization`` header on this hop — never in a log
+      (Req 7.1); any header collection that must be logged is routed through
+      ``redact_sensitive`` first (Req 7.6).
+
+    - When NO token resolves, the client falls back to the SigV4 transport
+      (``streamable_http_sigv4.py``) signed with the runtime's own IAM
+      principal. This is the explicit fail-closed path (Req 5.1): the Gateway is
+      STILL called rather than the request being blocked, but the request
+      reaches the Gateway with NO Verified_JWT (Req 5.2). The Gateway therefore
+      applies the NonAdmin role by default for both discovery and invocation
+      (Req 5.3), and the RESPONSE discovery-filter interceptor likewise resolves
+      NonAdmin and filters the catalog to billing + pricing (Req 5.4). The
+      runtime never escalates this token-less path to Admin (Req 5.5). The SigV4
+      path is retained only as an incremental-migration fallback — the primary
+      path for user requests forwards the user JWT.
 
     The returned client is NOT yet connected; the caller manages its lifecycle
-    (per-request tool discovery and invocation are wired in later tasks).
+    (per-request tool discovery and invocation are wired in the invoke handler).
     """
     if token:
         logger.info("🔧 Building per-request MCP client with Bearer (user JWT) transport")
@@ -340,9 +428,15 @@ def invoke(payload, context=None):
 
     # Resolve the user's Cognito token from the inbound request (never a role
     # field from the payload) and build a per-request MCP client that forwards
-    # the token unmodified to the Gateway. If no token resolves, the helper
-    # falls back to the SigV4 transport so the Gateway is still called and
-    # applies the NonAdmin role by default (Req 7.2, 7.3, 7.4).
+    # the token unmodified to the Gateway via the hop-2 Authorization: Bearer
+    # transport. If no token resolves, the helper falls back to the SigV4
+    # transport (the runtime's own IAM principal): the Gateway is still called
+    # but reaches it with no Verified_JWT, so it applies the NonAdmin role by
+    # default. The runtime never escalates a token-less request to Admin based
+    # on payload content — this is the explicit fail-closed posture
+    # (Req 5.1, 5.2, 5.3, 5.5). The Raw_Token is never logged; any payload/body/
+    # header collection that must be logged is routed through redact_sensitive
+    # first (Req 7.1, 7.6).
     user_token = resolve_user_token(payload, context)
     request_mcp_client = build_mcp_client_for_token(user_token)
 
