@@ -274,6 +274,18 @@ Deploy via `npx cdk deploy --all` from the `cdk/` directory. Six stacks are prov
 5. **AgentRuntimeStack** — Main Strands agent with Gateway integration and AgentCore Memory
 6. **ConversationHistoryStack** — DynamoDB table + API Gateway + Lambda for conversation persistence
 
+### Upstream MCP source
+
+The Billing, Pricing, CloudWatch, and CloudTrail MCP server images are built by cloning the public [`awslabs/mcp`](https://github.com/awslabs/mcp) repository and patching it for streamable-HTTP transport (see `ImageStack`).
+
+The external repository URL is **centralized in a single config file** rather than duplicated across the four patch scripts:
+
+- `codebuild-scripts/mcp-source.conf` — defines `MCP_REPO_URL`
+
+Each of the four patch scripts (`patch-billing.sh`, `patch-cloudtrail.sh`, `patch-cloudwatch.sh`, `patch-pricing.sh`) sources this file and clones `${MCP_REPO_URL}`. To point the build at a fork or an internal mirror, change **only** `mcp-source.conf` — the scripts do not hard-code the URL. The config is uploaded to the CodeBuild source bucket alongside the scripts automatically.
+
+> The patch scripts apply an **exact-text patch** to each upstream `server.py` (`def main()` → streamable-HTTP); if the upstream source changes that block, the script fails fast with a clear error. The Inventory MCP server is **not** affected — it builds from local source in `mcp-servers/inventory/`, not from a clone.
+
 ### Choosing the Bedrock model
 
 The agent's model is configurable at deploy time — you do **not** need to edit the stack. Set it via an environment variable or CDK context before deploying:

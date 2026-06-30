@@ -4,8 +4,14 @@ set -euo pipefail
 echo "=== Patch Script: Clone and Patch Pricing MCP Server ==="
 
 # Clone upstream repository
-echo "Cloning upstream MCP repository..."
-git clone --depth 1 https://github.com/awslabs/mcp.git
+# Upstream MCP source repo URL is centralized in mcp-source.conf (single source
+# of truth for all patch scripts; see README "Upstream MCP source").
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=mcp-source.conf
+. "${SCRIPT_DIR}/mcp-source.conf"
+
+echo "Cloning upstream MCP repository (${MCP_REPO_URL})..."
+git clone --depth 1 "${MCP_REPO_URL}"
 cd mcp/src/aws-pricing-mcp-server
 
 SERVER_FILE="awslabs/aws_pricing_mcp_server/server.py"

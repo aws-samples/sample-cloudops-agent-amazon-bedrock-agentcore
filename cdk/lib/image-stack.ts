@@ -88,12 +88,28 @@ export class ImageStack extends cdk.Stack {
       lifecycleRules: [{ description: 'Keep last 10 images', maxImageCount: 10 }],
     });
 
+    // Dedicated bucket to receive S3 server access logs for the source bucket
+    // (a log-target bucket does not itself log, to avoid a logging loop).
+    const accessLogsBucket = new s3.Bucket(this, 'SourceBucketAccessLogs', {
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      enforceSSL: true,
+      lifecycleRules: [
+        { id: 'DeleteOldAccessLogs', enabled: true, expiration: cdk.Duration.days(90) },
+      ],
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    });
+
     // S3 Bucket for CodeBuild source (buildspec + patch scripts)
     this.sourceBucket = new s3.Bucket(this, 'SourceBucket', {
       versioned: true,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       encryption: s3.BucketEncryption.S3_MANAGED,
       enforceSSL: true,
+      // Server access logging enabled (delivered to the dedicated log bucket).
+      serverAccessLogsBucket: accessLogsBucket,
+      serverAccessLogsPrefix: 'source-bucket-access-logs/',
       lifecycleRules: [
         { id: 'DeleteOldVersions', enabled: true, noncurrentVersionExpiration: cdk.Duration.days(30) },
       ],
@@ -499,8 +515,8 @@ export class ImageStack extends cdk.Stack {
     // ========================================
     // CDK-Nag Suppressions
     // ========================================
-    NagSuppressions.addResourceSuppressions(this.sourceBucket, [
-      { id: 'AwsSolutions-S1', reason: 'Server access logging not enabled for dev/demo.' },
+    NagSuppressions.addResourceSuppressions(accessLogsBucket, [
+      { id: 'AwsSolutions-S1', reason: 'This is the S3 server-access-log target bucket; a log bucket does not log to itself.' },
     ]);
 
     NagSuppressions.addStackSuppressions(this, [

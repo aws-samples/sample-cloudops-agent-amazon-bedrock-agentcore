@@ -100,7 +100,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
     event["response"] = response
 
-    logger.info(
+    # role_claim is a non-secret enum ("admin"/"nonadmin") derived from group
+    # membership, never a credential or token — safe to log for traceability.
+    logger.info(  # nosemgrep: python.lang.security.audit.logging.python-logger-credential-disclosure
         "Pre token generation: injected role claim '%s' (trigger version %s)",
         role_claim,
         version,
