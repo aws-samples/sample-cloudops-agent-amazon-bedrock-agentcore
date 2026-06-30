@@ -223,7 +223,11 @@ export class AuthStack extends cdk.Stack {
 
     // Authenticated Role - Can invoke Main Agent Runtime
     const authenticatedRole = new iam.Role(this, 'AuthenticatedRole', {
-      roleName: `${this.stackName}-authenticated-role`,
+      // No explicit roleName: IAM role names are account-GLOBAL, so a fixed
+      // name collides when this stack is deployed to more than one region in
+      // the same account. Letting CDK generate the physical name keeps it
+      // unique per deployment. The role is consumed by ARN (identity pool
+      // attachment + the AuthenticatedRoleArn output), never by name.
       assumedBy: new iam.FederatedPrincipal(
         'cognito-identity.amazonaws.com',
         {
@@ -238,8 +242,13 @@ export class AuthStack extends cdk.Stack {
       ),
     });
 
-    // Note: Runtime ARN will be added after AgentStack is deployed
-    // Frontend users will invoke the main agent runtime via IAM
+    // Least-privilege grant: frontend users only ever invoke the main agent
+    // runtime (`cloudops_runtime*`). The downstream MCP runtimes are reached
+    // Gateway -> target via OAuth, never directly by the frontend principal,
+    // so they are intentionally excluded from this grant. The trailing `/*`
+    // (within the `cloudops_runtime*` wildcard) covers all session IDs and
+    // conversation turns. Feature: gateway-security-hardening (Requirements
+    // 6.1, 6.2, 6.3, 6.4, 6.5).
     authenticatedRole.addToPolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: [
@@ -248,18 +257,14 @@ export class AuthStack extends cdk.Stack {
         'bedrock-agentcore:ListRuntimes',
       ],
       resources: [
-        `arn:aws:bedrock-agentcore:${this.region}:${this.account}:runtime/cloudops_billing_mcp*`,
-        `arn:aws:bedrock-agentcore:${this.region}:${this.account}:runtime/cloudops_pricing_mcp*`,
         `arn:aws:bedrock-agentcore:${this.region}:${this.account}:runtime/cloudops_runtime*`,
-        `arn:aws:bedrock-agentcore:${this.region}:${this.account}:runtime/cloudops_cloudwatch_mcp*`,
-        `arn:aws:bedrock-agentcore:${this.region}:${this.account}:runtime/cloudops_cloudtrail_mcp*`,
-        `arn:aws:bedrock-agentcore:${this.region}:${this.account}:runtime/cloudops_inventory_mcp*`,
       ],
     }));
 
     // Unauthenticated Role - Deny all
     const unauthenticatedRole = new iam.Role(this, 'UnauthenticatedRole', {
-      roleName: `${this.stackName}-unauthenticated-role`,
+      // No explicit roleName, for the same account-global IAM uniqueness
+      // reason as the authenticated role above.
       assumedBy: new iam.FederatedPrincipal(
         'cognito-identity.amazonaws.com',
         {
@@ -450,7 +455,7 @@ export class AuthStack extends cdk.Stack {
     NagSuppressions.addResourceSuppressions(authenticatedRole, [
       {
         id: 'AwsSolutions-IAM5',
-        reason: 'Wildcard required for AgentCore runtime invocation to support all session IDs and conversation turns (runtime ARN with /* suffix)',
+        reason: 'Grant scoped to the main runtime only (cloudops_runtime*); the trailing session-id wildcard is required for AgentCore runtime invocation to support all session IDs and conversation turns (runtime ARN with /* suffix). Feature: gateway-security-hardening (Requirement 6.1).',
       },
     ], true);
 

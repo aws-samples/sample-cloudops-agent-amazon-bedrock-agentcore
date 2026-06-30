@@ -47,7 +47,6 @@ export class AgentRuntimeStack extends cdk.Stack {
 
     // Main Runtime Role
     const runtimeRole = new iam.Role(this, 'RuntimeRole', {
-      roleName: `${this.stackName}-RuntimeRole`,
       assumedBy: new iam.ServicePrincipal('bedrock-agentcore.amazonaws.com'),
     });
 

@@ -21,14 +21,6 @@ NOTE: Task 1.2 adds `authorize`, `discovery_filter`, `format_authorization_error
 and `build_deny_audit_entry` to this same module. The structure below (shared
 constants, the `ALLOWED` mapping, and string-valued enums) is arranged so those
 additions slot in without changing this task's surface.
-
-VENDORED COPY -- AUTHORITATIVE SOURCE: ``agentcore/authorization_model.py``
-This file is a byte-for-byte mirror of the authoritative module, vendored here
-because this interceptor Lambda is packaged as a self-contained directory asset
-(``lambda.Code.fromAsset(...)``) and the ``agentcore`` package lives outside the
-asset root, so it cannot be imported at Lambda runtime. The module is pure and
-dependency-free, so the full copy is vendored (rather than a minimal slice) to
-minimize drift. Keep in sync with the authoritative module.
 """
 
 from __future__ import annotations
@@ -291,6 +283,90 @@ def discovery_filter(role: Role, catalog: Iterable[Any]) -> List[Any]:
         The list of tools whose category is permitted for ``role``.
     """
     return [tool for tool in catalog if _is_allowed(role, _tool_category(tool))]
+
+
+# ---------------------------------------------------------------------------
+# Tool-name classification (RESPONSE discovery-filter interceptor surface)
+# ---------------------------------------------------------------------------
+#
+# The discovery-filter RESPONSE interceptor receives tool descriptors carrying a
+# fully-qualified gateway tool ``name`` (not a ``.category``). The pure helpers
+# below classify such a name to its category and decide retention, keeping that
+# classification in this single source of truth so it is property-testable and
+# reused verbatim by the vendored Lambda copy.
+
+# The Gateway-provided semantic search tool; it carries no category prefix and
+# is retained for every role (Req 3.4).
+BUILTIN_SEARCH_TOOL_NAME: str = "x_amz_bedrock_agentcore_search"
+
+# Exact, case-sensitive LEADING prefixes that map a fully-qualified gateway tool
+# name to its category (Req 3.1). NOTE the asymmetry, taken verbatim from the
+# requirements glossary: ``inventoryMcp__`` uses two trailing underscores while
+# the other four use three. Ordered so classification is a deterministic
+# first-match scan.
+TOOL_NAME_CATEGORY_PREFIXES: tuple[tuple[str, ToolCategory], ...] = (
+    ("billingMcp___", ToolCategory.billing),
+    ("pricingMcp___", ToolCategory.pricing),
+    ("cloudwatchMcp___", ToolCategory.cloudwatch),
+    ("cloudtrailMcp___", ToolCategory.cloudtrail),
+    ("inventoryMcp__", ToolCategory.inventory),
+)
+
+
+def category_for_tool_name(tool_name: Any) -> Optional[ToolCategory]:
+    """Classify a fully-qualified gateway tool name to its ``ToolCategory``.
+
+    Matching is an exact, case-sensitive LEADING prefix match against
+    ``TOOL_NAME_CATEGORY_PREFIXES`` (Req 3.1). Returns ``None`` -- treated as an
+    unknown category under the default-deny posture -- for the builtin search
+    tool (it carries no prefix), for a name where a known prefix appears only as
+    a non-leading substring (Req 3.3), for an empty / whitespace / odd name, for
+    a non-string value, and for any otherwise unrecognized name (Req 3.2).
+
+    Args:
+        tool_name: The fully-qualified gateway tool name (any value; non-strings
+            are rejected).
+
+    Returns:
+        The bound ``ToolCategory`` for an exact leading prefix match, else
+        ``None``.
+    """
+    if not isinstance(tool_name, str):
+        return None
+    for prefix, category in TOOL_NAME_CATEGORY_PREFIXES:
+        if tool_name.startswith(prefix):
+            return category
+    return None
+
+
+def retain_tool_for_role(role: Role, tool_name: Any) -> bool:
+    """Per-descriptor retention predicate for the RESPONSE discovery filter.
+
+    The builtin search tool is retained for every role (Req 3.4). Every other
+    name is classified by its leading prefix and retained if and only if its
+    category is allowed for ``role`` -- i.e. ``authorize(role, category) ==
+    Decision.Allow``. Unknown / unclassifiable names (``category_for_tool_name``
+    returns ``None``) are denied under the default-deny posture, so a new tool
+    category with no ``ALLOWED`` entry for the role is excluded without any
+    change to this logic (Req 1.2, 1.3, 1.4, 3.2, 3.6).
+
+    This composes the authoritative ``authorize`` / ``ALLOWED`` surface and does
+    NOT restate the role -> category rules (Req 1.6).
+
+    Args:
+        role: The resolved caller role.
+        tool_name: The fully-qualified gateway tool name from the descriptor.
+
+    Returns:
+        ``True`` iff the tool should be retained in the role's discovery
+        response.
+    """
+    if tool_name == BUILTIN_SEARCH_TOOL_NAME:
+        return True
+    category = category_for_tool_name(tool_name)
+    if category is None:
+        return False
+    return authorize(role, category) == Decision.Allow
 
 
 # ---------------------------------------------------------------------------

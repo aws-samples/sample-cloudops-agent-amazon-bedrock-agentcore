@@ -638,6 +638,41 @@ def handler(event, context):
     denyAuditInterceptorFn.grantInvoke(gatewayRole);
 
     // ========================================
+    // Discovery-filter RESPONSE interceptor (Lambda)
+    //
+    // Filters the `tools/list` Discovery_Response down to the caller's allowed
+    // categories before the Gateway returns it, so a NonAdmin user cannot
+    // enumerate the names/descriptions/input schemas of tools they cannot
+    // invoke. It is a DISTINCT, independently reasoned interceptor from the
+    // deny-audit REQUEST interceptor above: it transforms only `tools/list`
+    // responses, never audits or enforces invocation, reuses the authoritative
+    // role->category model (vendored byte-for-byte), and fails closed (returns
+    // an empty tool list) on any error — never the unfiltered catalog. It
+    // decodes (does not verify) the already-verified Authorization JWT solely
+    // to read `sub`/`role` and never logs the token.
+    // ========================================
+
+    // Dedicated, retained log group — mirrors DenyAuditInterceptorLogGroup.
+    const discoveryFilterLogGroup = new logs.LogGroup(this, 'DiscoveryFilterInterceptorLogGroup', {
+      retention: logs.RetentionDays.ONE_YEAR,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    const discoveryFilterInterceptorFn = new lambda.Function(this, 'DiscoveryFilterInterceptorFunction', {
+      runtime: lambda.Runtime.PYTHON_3_12,
+      handler: 'handler.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/discovery-filter-interceptor')),
+      description: 'Role-filtered tool discovery RESPONSE interceptor for the CloudOps Gateway.',
+      memorySize: 128,
+      timeout: cdk.Duration.seconds(10),
+      logGroup: discoveryFilterLogGroup,
+    });
+
+    // The Gateway service role invokes the interceptor. Scope the grant to this
+    // function only (interceptor security best practice — never a wildcard).
+    discoveryFilterInterceptorFn.grantInvoke(gatewayRole);
+
+    // ========================================
     // Gateway (CUSTOM_JWT auth — verifies per-user Cognito tokens so the
     // role claim reaches AgentCore Policy for fine-grained authorization)
     // ========================================
@@ -689,11 +724,28 @@ def handler(event, context):
               PassRequestHeaders: true,
             },
           },
+          // Register the discovery-filter RESPONSE interceptor.
+          // PassRequestHeaders=true so it can read the (already-verified)
+          // Authorization header to recover the JWT `role` for filtering;
+          // the handler never logs the token. It transforms only `tools/list`
+          // discovery responses and fails closed to an empty tool list.
+          {
+            InterceptionPoints: ['RESPONSE'],
+            Interceptor: {
+              Lambda: {
+                Arn: discoveryFilterInterceptorFn.functionArn,
+              },
+            },
+            InputConfiguration: {
+              PassRequestHeaders: true,
+            },
+          },
         ],
         RoleArn: gatewayRole.roleArn,
       },
     });
     gateway.node.addDependency(denyAuditInterceptorFn);
+    gateway.node.addDependency(discoveryFilterInterceptorFn);
     gateway.node.addDependency(oauthProvider);
     gateway.node.addDependency(policyEngine);
     // The Gateway calls GetPolicyEngine using its service role at create time,

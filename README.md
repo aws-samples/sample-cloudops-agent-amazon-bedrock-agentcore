@@ -41,7 +41,7 @@ flowchart TB
     subgraph AgentCore["Amazon Bedrock AgentCore"]
         Runtime["Agent Runtime<br/>(Strands Agent + Claude Sonnet)"]
         Memory["AgentCore Memory<br/>(Session Context)"]
-        Gateway["AgentCore Gateway<br/>(CUSTOM_JWT + Cedar Policy<br/>+ Deny-Audit Interceptor)"]
+        Gateway["AgentCore Gateway<br/>(CUSTOM_JWT + Cedar Policy<br/>+ Deny-Audit & Discovery-Filter Interceptors)"]
     end
 
     subgraph MCPServers["MCP Server Runtimes"]
@@ -140,7 +140,7 @@ sequenceDiagram
 1. **User submits a query** — The user types a question (e.g. "Which RDS instances are approaching end of support?") into the React chat interface and presses send.
 2. **Persist the user message** — The frontend immediately saves the user's message to DynamoDB via `POST /conversations/{id}`, so the conversation survives reloads even before the agent responds.
 3. **Invoke the agent** — The frontend sends the query to the AgentCore Runtime with a SigV4-signed `POST /runtimes/{arn}/invocations` request, and includes the user's Cognito **access token** (carrying the `role` claim) in the payload. A "Working..." indicator is shown while the request is in flight.
-4. **Tool discovery** — The Strands agent in the Runtime discovers tools through the AgentCore Gateway, forwarding the user's token as a Bearer credential. It lists tools via standard MCP `tools/list`, and because the Gateway is configured for **semantic search**, the agent also calls the Gateway's built-in `x_amz_bedrock_agentcore_search` tool to surface tools that aren't immediately visible (CloudWatch, CloudTrail, Inventory, Pricing). Discovery is **not** role-filtered — the full tool catalog across all registered servers (Billing, Pricing, CloudWatch, CloudTrail, Inventory) is visible to every authenticated user. Authorization is enforced at tool **invocation**, not discovery: AgentCore Policy (Cedar) makes the per-user allow/deny decision when a tool is actually called (see [Role-Based Tool Access Control](#role-based-tool-access-control)).
+4. **Tool discovery** — The Strands agent in the Runtime discovers tools through the AgentCore Gateway, forwarding the user's token as a Bearer credential. It lists tools via standard MCP `tools/list`, and because the Gateway is configured for **semantic search**, the agent also calls the Gateway's built-in `x_amz_bedrock_agentcore_search` tool to surface tools that aren't immediately visible (CloudWatch, CloudTrail, Inventory, Pricing). Discovery **is** role-filtered: a Gateway **RESPONSE interceptor** trims the `tools/list` catalog to the categories the caller's verified `role` permits, so a Non-Admin only sees billing and pricing tools (plus the built-in search tool) and never the names, descriptions, or input schemas of CloudWatch/CloudTrail/Inventory tools. Authorization is then enforced again at tool **invocation** by AgentCore Policy (Cedar) as a second, authoritative layer (see [Role-Based Tool Access Control](#role-based-tool-access-control)).
 5. **Reasoning and tool selection** — Claude Sonnet reasons over the query and the available tools, then decides which tool(s) to call and with what arguments (e.g. `inventoryMcp___list_rds_instances`).
 6. **Tool invocation** — The Runtime calls the chosen tool through the Gateway. The Gateway forwards the request to the appropriate MCP server runtime over an OAuth-authenticated connection.
 7. **MCP server queries AWS** — The MCP server calls the relevant AWS APIs (and, for Inventory, enriches results with end-of-support dates read from the `aws-eol-schedules` DynamoDB table) and returns a structured result to the Gateway, which relays it back to the Runtime.
@@ -163,7 +163,7 @@ The request path crosses three trust boundaries, each using a different mechanis
 
 **Token exchange details:**
 
-1. **User identity (Cognito).** After sign-in, Cognito issues JWTs. The Cognito **Identity Pool** then federates that identity through STS `AssumeRoleWithWebIdentity` to mint **temporary AWS credentials** bound to the `AuthenticatedRole`. That role allows `bedrock-agentcore:InvokeAgentRuntime` (plus `GetRuntime`/`ListRuntimes`) scoped to the `cloudops_*` runtimes — unauthenticated identities are explicitly denied everything.
+1. **User identity (Cognito).** After sign-in, Cognito issues JWTs. The Cognito **Identity Pool** then federates that identity through STS `AssumeRoleWithWebIdentity` to mint **temporary AWS credentials** bound to the `AuthenticatedRole`. That role allows `bedrock-agentcore:InvokeAgentRuntime` (plus `GetRuntime`/`ListRuntimes`) scoped to the main `cloudops_runtime*` runtime only — the downstream MCP runtimes are reached Gateway→target via OAuth and are not directly invokable by the frontend principal. Unauthenticated identities are explicitly denied everything.
 
 2. **Two parallel paths from the frontend.** Conversation history calls go to **API Gateway**, which validates the raw **Cognito JWT** (no IAM involved). Agent invocations go to the **AgentCore Runtime** using **SigV4** signed with the temporary credentials, and additionally carry the user's Cognito **access token** in the payload. These are deliberately separate: data persistence is user-scoped via JWT claims, while agent invocation is gated by IAM.
 
@@ -192,7 +192,9 @@ How it works end to end:
    - `permit` **billing** + **pricing** for every authenticated user;
    - `permit` **cloudwatch** + **cloudtrail** + **inventory** only when `role == "admin"`.
      Cedar is **default-deny**, so a Non-Admin invoking a denied category — or any future tool category added later — is denied unless explicitly permitted. Each tool category maps to a Gateway **target action group** (e.g. `AgentCore::Action::"cloudwatchMcp"`), so policies reference targets without enumerating individual tool names.
-4. **Denial handling & audit.** A denied invocation returns an authorization error identifying the category (no tool data), and the Agent Runtime surfaces a "not available for your role" message. A **deny-audit REQUEST interceptor** emits a single structured CloudWatch record per deny (`identityRef` = JWT `sub`, category, `deny`, timestamp) — never the token or tool arguments.
+4. **Discovery filtering & denial handling & audit.** Authorization is applied at two points:
+   - **Discovery (RESPONSE interceptor).** A Gateway **RESPONSE interceptor** filters the `tools/list` catalog to the caller's allowed categories, reusing the same authoritative role→category model. A Non-Admin therefore never sees the names, descriptions, or input schemas of CloudWatch/CloudTrail/Inventory tools. The built-in `x_amz_bedrock_agentcore_search` tool is retained for every role; as an accepted tradeoff, its semantic-search results may still reference the _names_ of tools the role cannot invoke (no tool data is reachable, since invocation is denied). The interceptor fails **closed** — on any error it returns an empty catalog rather than the full one.
+   - **Invocation (Cedar) & audit.** A denied invocation returns an authorization error identifying the category (no tool data), and the Agent Runtime surfaces a "not available for your role" message. A **deny-audit REQUEST interceptor** emits a single structured CloudWatch record per deny (`identityRef` = JWT `sub`, category, `deny`, timestamp) — never the token or tool arguments.
 
 > **Note:** because the role is carried in the user's token, the **FrontEnd must be deployed** and configured against this stack's Cognito User Pool / app client for Admin users to be recognized. If the token is not forwarded, the Gateway applies the `NonAdmin` role by default (billing/pricing only).
 
@@ -268,7 +270,7 @@ Deploy via `npx cdk deploy --all` from the `cdk/` directory. Six stacks are prov
 1. **ImageStack** — ECR repositories + CodeBuild projects for container images
 2. **AuthStack** — Cognito User Pool (Essentials feature plan), Identity Pool, M2M client, IAM roles, the `Administrators` group, and the Pre-Token-Generation Lambda that injects the `role` claim
 3. **MCPRuntimeStack** — AgentCore Runtimes for Billing, Pricing, CloudWatch, CloudTrail, Inventory MCP servers
-4. **AgentCoreGatewayStack** — Unified tool discovery/invocation endpoint with `CUSTOM_JWT` inbound auth, an AgentCore **Policy Engine** (Cedar role→category rules), a deny-audit interceptor, and OAuth credential provider for the MCP targets
+4. **AgentCoreGatewayStack** — Unified tool discovery/invocation endpoint with `CUSTOM_JWT` inbound auth, an AgentCore **Policy Engine** (Cedar role→category rules), a deny-audit REQUEST interceptor, a discovery-filter RESPONSE interceptor (role-filters the `tools/list` catalog), and OAuth credential provider for the MCP targets
 5. **AgentRuntimeStack** — Main Strands agent with Gateway integration and AgentCore Memory
 6. **ConversationHistoryStack** — DynamoDB table + API Gateway + Lambda for conversation persistence
 
