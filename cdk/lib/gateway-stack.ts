@@ -170,7 +170,18 @@ def handler(event, context):
 `),
     });
 
+    // Wildcard resource is REQUIRED here and cannot be scoped further: these are
+    // account-level control-plane actions on the AgentCore identity store. The
+    // OAuth2 credential provider and token vault do not exist yet (this custom
+    // resource CREATES them), so their ARNs are unknown at policy-definition
+    // time, and AgentCore does not support resource-level scoping for the
+    // Create*/Get* token-vault / credential-provider actions. The blast radius
+    // is contained to the bedrock-agentcore identity APIs (no data-plane or IAM
+    // actions), the function runs only as a CloudFormation custom resource, and
+    // the related Secrets Manager grant below IS scoped to the
+    // bedrock-agentcore-identity* secret prefix.
     oauthProviderFn.addToRolePolicy(new iam.PolicyStatement({
+      sid: 'AgentCoreIdentityProviderManagement',
       effect: iam.Effect.ALLOW,
       actions: [
         'bedrock-agentcore:CreateOauth2CredentialProvider',
@@ -512,7 +523,19 @@ def handler(event, context):
 `),
     });
 
+    // Wildcard resource is REQUIRED and cannot be scoped at policy-definition
+    // time: this custom resource CREATES the policy engine and its policies, so
+    // their ARNs do not exist yet, and the List* actions are account-level by
+    // definition (they enumerate all engines/policies and accept no resource
+    // constraint). The gateway-targeting actions (InvokeGateway/GetGateway/
+    // List/GetGatewayTarget) are used at create time to validate each Cedar
+    // policy against the live gateway tool schema. The blast radius is limited
+    // to the bedrock-agentcore Policy/Gateway control plane, and the function
+    // runs only as a CloudFormation custom resource during stack deploy/delete.
+    // (The gateway *service* role's AuthorizeAction grant IS scoped to the
+    // specific policy-engine and gateway ARNs — see PolicyEngineAuthorization.)
     policyEngineFn.addToRolePolicy(new iam.PolicyStatement({
+      sid: 'AgentCorePolicyEngineManagement',
       effect: iam.Effect.ALLOW,
       actions: [
         'bedrock-agentcore:CreatePolicyEngine',

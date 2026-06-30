@@ -261,7 +261,7 @@ export class AuthStack extends cdk.Stack {
       ],
     }));
 
-    // Unauthenticated Role - Deny all
+    // Unauthenticated Role - no permissions.
     const unauthenticatedRole = new iam.Role(this, 'UnauthenticatedRole', {
       // No explicit roleName, for the same account-global IAM uniqueness
       // reason as the authenticated role above.
@@ -279,11 +279,12 @@ export class AuthStack extends cdk.Stack {
       ),
     });
 
-    unauthenticatedRole.addToPolicy(new iam.PolicyStatement({
-      effect: iam.Effect.DENY,
-      actions: ['*'],
-      resources: ['*'],
-    }));
+    // Intentionally NO inline policy on the unauthenticated role. IAM is
+    // default-deny, so a role with zero Allow statements already grants
+    // nothing — this is equivalent to (and safer than) an explicit
+    // `Deny */*`, which an overly-broad deny can interfere with future role
+    // changes. The identity pool also sets allowUnauthenticatedIdentities:
+    // false, so this role is not assumable in practice.
 
     // Attach roles to Identity Pool
     new cognito.CfnIdentityPoolRoleAttachment(this, 'IdentityPoolRoleAttachment', {

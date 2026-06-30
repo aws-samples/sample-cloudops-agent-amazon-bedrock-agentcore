@@ -95,7 +95,13 @@ export class MCPRuntimeStack extends cdk.Stack {
     props.pricingMcpRepository.grantPull(pricingMcpRuntimeRole);
 
     // Add Cost Explorer and billing permissions to Billing MCP Runtime
+    // Statement 1 — Cost-management & pricing APIs. These services
+    // (Cost Explorer, Budgets, Compute Optimizer, Free Tier, Cost Optimization
+    // Hub, Pricing) are account/region-global and do NOT support resource-level
+    // ARNs, so Resource: '*' is required. All actions are read-only despite the
+    // `:*` form (these services expose no mutating actions the server uses).
     billingMcpRuntimeRole.addToPolicy(new iam.PolicyStatement({
+      sid: 'CostManagementAndPricingReadOnly',
       effect: iam.Effect.ALLOW,
       actions: [
         'ce:*',
@@ -108,6 +114,21 @@ export class MCPRuntimeStack extends cdk.Stack {
         'pricing:DescribeServices',
         'pricing:ListPriceListFiles',
         'pricing:GetPriceListFileUrl',
+      ],
+      resources: ['*'],
+    }));
+
+    // Statement 2 — Resource-inventory Describe/List actions used by the
+    // upstream Billing MCP server's rightsizing / Compute Optimizer features to
+    // correlate cost data with EC2/EBS/Auto Scaling/Lambda/ECS resources. These
+    // are all read-only Describe*/List*/Get* actions; the AWS Describe/List APIs
+    // they call are region-scoped and do not accept resource-level ARNs, so
+    // Resource: '*' is required. They are required for the billing tools to
+    // function — removing them breaks rightsizing/optimization lookups.
+    billingMcpRuntimeRole.addToPolicy(new iam.PolicyStatement({
+      sid: 'ResourceInventoryReadOnly',
+      effect: iam.Effect.ALLOW,
+      actions: [
         'ec2:DescribeInstances',
         'ec2:DescribeVolumes',
         'ec2:DescribeInstanceTypes',
