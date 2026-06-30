@@ -98,17 +98,25 @@ export class MCPRuntimeStack extends cdk.Stack {
     // Statement 1 — Cost-management & pricing APIs. These services
     // (Cost Explorer, Budgets, Compute Optimizer, Free Tier, Cost Optimization
     // Hub, Pricing) are account/region-global and do NOT support resource-level
-    // ARNs, so Resource: '*' is required. All actions are read-only despite the
-    // `:*` form (these services expose no mutating actions the server uses).
+    // ARNs, so Resource: '*' is required. Actions are scoped to read-only verbs
+    // (Get*/Describe*/List*/ViewBudget) — no Create*/Modify*/Delete*.
     billingMcpRuntimeRole.addToPolicy(new iam.PolicyStatement({
       sid: 'CostManagementAndPricingReadOnly',
       effect: iam.Effect.ALLOW,
       actions: [
-        'ce:*',
-        'budgets:*',
-        'compute-optimizer:*',
-        'freetier:*',
-        'cost-optimization-hub:*',
+        // Read-only verb-scoped actions (no Create*/Modify*/Delete*): the
+        // billing server only reads cost/usage/optimization data. These
+        // services are account-global and do not support resource-level ARNs.
+        'ce:Get*',
+        'ce:Describe*',
+        'ce:List*',
+        'budgets:Describe*',
+        'budgets:ViewBudget',
+        'compute-optimizer:Get*',
+        'compute-optimizer:Describe*',
+        'freetier:Get*',
+        'cost-optimization-hub:Get*',
+        'cost-optimization-hub:List*',
         'pricing:GetProducts',
         'pricing:GetAttributeValues',
         'pricing:DescribeServices',
@@ -282,12 +290,25 @@ export class MCPRuntimeStack extends cdk.Stack {
     // ECR image pull for CloudWatch repository
     props.cloudwatchMcpRepository.grantPull(cloudwatchMcpRuntimeRole);
 
-    // Grant CloudWatch and Logs permissions
+    // Grant CloudWatch and Logs READ-ONLY permissions. The CloudWatch MCP
+    // server only reads metrics/alarms/dashboards/log groups and runs Logs
+    // Insights queries, so this is scoped to Describe*/Get*/List* plus the
+    // (non-destructive) Logs Insights query verbs — no Put*/Delete*/Create*.
+    // CloudWatch/Logs read APIs are account/region-level and do not support
+    // resource-level ARNs, so Resource: '*' is required.
     cloudwatchMcpRuntimeRole.addToPolicy(new iam.PolicyStatement({
+      sid: 'CloudWatchAndLogsReadOnly',
       effect: iam.Effect.ALLOW,
       actions: [
-        'cloudwatch:*',
-        'logs:*',
+        'cloudwatch:Describe*',
+        'cloudwatch:Get*',
+        'cloudwatch:List*',
+        'logs:Describe*',
+        'logs:Get*',
+        'logs:List*',
+        'logs:FilterLogEvents',
+        'logs:StartQuery',
+        'logs:StopQuery',
       ],
       resources: ['*'],
     }));
@@ -360,8 +381,15 @@ export class MCPRuntimeStack extends cdk.Stack {
     // ECR image pull for CloudTrail repository
     props.cloudtrailMcpRepository.grantPull(cloudtrailMcpRuntimeRole);
 
-    // Add CloudTrail-specific permissions
+    // CloudTrail read-only audit permissions. Resource: '*' is required and
+    // cannot be scoped to specific trail ARNs: the CloudTrail MCP server reads
+    // EXISTING account trails/events that this stack does not create, so the
+    // trail ARNs are unknown at deploy time. LookupEvents and ListTrails are
+    // account-level APIs by design; the remaining actions (GetTrailStatus,
+    // DescribeTrails, GetEventSelectors) are read-only and do not expose
+    // mutating capability.
     cloudtrailMcpRuntimeRole.addToPolicy(new iam.PolicyStatement({
+      sid: 'CloudTrailReadOnlyAudit',
       effect: iam.Effect.ALLOW,
       actions: [
         'cloudtrail:LookupEvents',
@@ -462,8 +490,14 @@ export class MCPRuntimeStack extends cdk.Stack {
     // ECR image pull for Inventory repository
     props.inventoryMcpRepository.grantPull(inventoryMcpRuntimeRole);
 
-    // Grant read-only access to EKS, RDS, OpenSearch, ElastiCache, MSK, and EC2 DescribeRegions
+    // Read-only cross-service inventory discovery (EKS, RDS, OpenSearch,
+    // ElastiCache, MSK, EC2). All actions are List*/Describe* reads. These
+    // Describe/List APIs enumerate resources account/region-wide and do NOT
+    // support resource-level ARNs, so Resource: '*' is required for the
+    // inventory server to discover clusters across the account. No mutating
+    // (Create/Modify/Delete) actions are granted.
     inventoryMcpRuntimeRole.addToPolicy(new iam.PolicyStatement({
+      sid: 'InventoryReadOnlyDiscovery',
       effect: iam.Effect.ALLOW,
       actions: [
         'eks:ListClusters',

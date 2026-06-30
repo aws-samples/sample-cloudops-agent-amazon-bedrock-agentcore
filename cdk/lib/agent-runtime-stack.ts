@@ -94,20 +94,6 @@ export class AgentRuntimeStack extends cdk.Stack {
       ])),
     }));
 
-    // Add Memory permissions to Main Runtime
-    runtimeRole.addToPolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        'bedrock-agentcore:CreateEvent',
-        'bedrock-agentcore:GetLastKTurns',
-        'bedrock-agentcore:GetMemory',
-        'bedrock-agentcore:ListEvents',
-      ],
-      resources: [
-        `arn:aws:bedrock-agentcore:${this.region}:${this.account}:memory/*`,
-      ],
-    }));
-
     // Add Gateway invocation permissions to Main Runtime
     runtimeRole.addToPolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
@@ -133,6 +119,24 @@ export class AgentRuntimeStack extends cdk.Stack {
     });
 
     this.memoryId = memory.memoryId;
+
+    // Add Memory permissions to Main Runtime, scoped to the specific Memory
+    // resource created by this stack (and its sub-resources, e.g. events)
+    // rather than all memories in the account. Declared after the Memory
+    // construct so memory.memoryId is available for the ARN.
+    runtimeRole.addToPolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'bedrock-agentcore:CreateEvent',
+        'bedrock-agentcore:GetLastKTurns',
+        'bedrock-agentcore:GetMemory',
+        'bedrock-agentcore:ListEvents',
+      ],
+      resources: [
+        `arn:aws:bedrock-agentcore:${this.region}:${this.account}:memory/${memory.memoryId}`,
+        `arn:aws:bedrock-agentcore:${this.region}:${this.account}:memory/${memory.memoryId}/*`,
+      ],
+    }));
 
     // ========================================
     // Main Agent Runtime
