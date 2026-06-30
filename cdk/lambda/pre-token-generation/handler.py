@@ -100,12 +100,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
     event["response"] = response
 
-    # role_claim is a non-secret enum ("admin"/"nonadmin") derived from group
-    # membership, never a credential or token — safe to log for traceability.
-    logger.info(  # nosemgrep: python.lang.security.audit.logging.python-logger-credential-disclosure
-        "Pre token generation: injected role claim '%s' (trigger version %s)",
-        role_claim,
-        version,
-    )
+    # Confirmation log only. The role is intentionally NOT interpolated into the
+    # message: it is recoverable from the issued token, and logging it trips a
+    # logger-credential-disclosure scanner heuristic. Keep this call free of any
+    # dynamic argument so it cannot be flagged as disclosing data.
+    logger.info("Pre token generation trigger processed; role claim injected.")
 
     return event

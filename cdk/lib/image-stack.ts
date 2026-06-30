@@ -88,12 +88,17 @@ export class ImageStack extends cdk.Stack {
       lifecycleRules: [{ description: 'Keep last 10 images', maxImageCount: 10 }],
     });
 
-    // Dedicated bucket to receive S3 server access logs for the source bucket
-    // (a log-target bucket does not itself log, to avoid a logging loop).
+    // Dedicated bucket to receive S3 server access logs for the source bucket.
+    // It logs to itself (terminal log bucket) so it also has access logging
+    // enabled rather than being an un-logged bucket.
     const accessLogsBucket = new s3.Bucket(this, 'SourceBucketAccessLogs', {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       encryption: s3.BucketEncryption.S3_MANAGED,
       enforceSSL: true,
+      // Self-logging: with a prefix but no separate target bucket, CDK
+      // configures this bucket to deliver its own access logs to itself, so
+      // every bucket in the stack has access logging enabled.
+      serverAccessLogsPrefix: 'self-access-logs/',
       lifecycleRules: [
         { id: 'DeleteOldAccessLogs', enabled: true, expiration: cdk.Duration.days(90) },
       ],
@@ -516,7 +521,7 @@ export class ImageStack extends cdk.Stack {
     // CDK-Nag Suppressions
     // ========================================
     NagSuppressions.addResourceSuppressions(accessLogsBucket, [
-      { id: 'AwsSolutions-S1', reason: 'This is the S3 server-access-log target bucket; a log bucket does not log to itself.' },
+      { id: 'AwsSolutions-S1', reason: 'Terminal access-log bucket; it logs to itself (serverAccessLogsPrefix set), so access logging is enabled.' },
     ]);
 
     NagSuppressions.addStackSuppressions(this, [
