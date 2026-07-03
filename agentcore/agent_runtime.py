@@ -9,10 +9,12 @@ from bedrock_agentcore.memory.integrations.strands.session_manager import AgentC
 from strands import Agent
 from strands.models import BedrockModel
 from strands.tools.mcp import MCPClient
-from botocore.credentials import Credentials
 from streamable_http_sigv4 import streamablehttp_client_with_sigv4
 from streamable_http_bearer import streamablehttp_client_with_bearer
 from authorization_model import is_authorization_denial, build_denial_response
+import base64
+import binascii
+import json
 import os
 import boto3
 import logging
@@ -53,14 +55,13 @@ model = BedrockModel(
     region_name=AWS_REGION
 )
 
-# Get AWS credentials for SigV4 signing
+# Get AWS credentials for SigV4 signing. Hold the live, refreshable credentials
+# object (botocore RefreshableCredentials under an assumed/container role) rather
+# than freezing a snapshot at import time (BUG 5 fix, Req 2.5). The live object is
+# passed into the SigV4 fallback transport so credential values are re-derived at
+# sign time (SigV4Auth.get_frozen_credentials()), triggering a refresh near expiry
+# instead of signing a long-lived container's requests with a stale snapshot.
 session = boto3.Session()
-credentials = session.get_credentials()
-frozen_credentials = Credentials(
-    access_key=credentials.access_key,
-    secret_key=credentials.secret_key,
-    token=credentials.token
-)
 
 # Extract Gateway ID from ARN and construct endpoint URL
 gateway_id = GATEWAY_ARN.split('/')[-1] if GATEWAY_ARN else None
@@ -101,12 +102,30 @@ REDACTED_PLACEHOLDER = "***REDACTED***"  # nosec B105 - mask marker, not a crede
 _SENSITIVE_EXACT_KEYS = frozenset({USER_TOKEN_PAYLOAD_FIELD})
 _SENSITIVE_LOWER_KEYS = frozenset({"authorization"})
 
+# Fail-closed AgentCore Memory actor used when NO verified Cognito ``sub`` can be
+# resolved for a request (BUG 1 fix, Req 2.1, 3.2). When memory is enabled we
+# still build an AgentCoreMemoryConfig for shape parity, but a token-less request
+# MUST NOT be keyed to a trusted per-user actor derived from untrusted payload
+# content (never the payload ``userId``). Instead every token-less request shares
+# this single non-cross-user-identifying placeholder actor, consistent with the
+# runtime's fail-closed NonAdmin posture: an anonymous request is the least-
+# privileged identity, never a per-user one derived from client-supplied data.
+TOKENLESS_MEMORY_ACTOR_ID = "unauthenticated"
+
 
 def redact_sensitive(obj):
-    """Return a copy of ``obj`` with token-bearing values masked for logging.
+    """Return a copy of ``obj`` with token-bearing values masked (safe-log path).
 
-    This is the SINGLE place any payload, request body, or header collection
-    MUST be routed through before it is written to a log. It masks:
+    PRIMARY POSTURE: the runtime does not currently log raw payloads, request
+    bodies, or headers at all — nothing token-bearing is written to a log on any
+    hop (Req 7.1). Because there is no live log path that emits such data, this
+    helper is NOT an active masking control routed on a real logging code path;
+    no call site currently sends payloads/bodies/headers through it.
+
+    This helper exists as the one correct, token-safe path to route through
+    SHOULD any FUTURE diagnostic ever need to log such a collection. If that
+    happens, its argument must be passed through ``redact_sensitive`` first
+    rather than logged raw. When used, it masks:
 
       - the ``accessToken`` field value (the user's Cognito token forwarded in
         the request body on the FrontEnd -> Agent_Runtime hop, Req 8.1/8.4), and
@@ -122,13 +141,7 @@ def redact_sensitive(obj):
     any value that is not a dict/list/tuple is returned unchanged, a key whose
     name matches a sensitive field has its value masked regardless of the
     value's type, and any unexpected error during the walk collapses to the
-    redaction marker. This guarantees the Raw_Token cannot survive a log call
-    that routes its argument through this helper (Req 7.1).
-
-    NOTE: the runtime does not currently log raw payloads/bodies/headers at all
-    (the no-log posture below is the primary control). This helper exists so
-    that any future diagnostic that needs to log such a collection has one
-    correct, token-safe path to route through rather than logging it raw.
+    redaction marker.
     """
     try:
         if isinstance(obj, dict):
@@ -202,6 +215,63 @@ def resolve_user_token(payload: dict, context=None) -> Optional[str]:
     return None
 
 
+def resolve_verified_sub(user_token: Optional[str], context=None) -> Optional[str]:
+    """Resolve the verified Cognito ``sub`` from the resolved user token.
+
+    This is the server-side per-user identity used to key AgentCore Memory
+    (BUG 1 fix, Req 2.1). It decodes the ALREADY-VERIFIED JWT payload from the
+    resolved ``user_token`` — base64url-decoding the payload segment and reading
+    the ``sub`` claim — mirroring the proven ``_decode_jwt_claims``/
+    ``_resolve_role`` approach in
+    ``cdk/lambda/discovery-filter-interceptor/handler.py``. It reuses the same
+    server-derived identity that the DynamoDB conversation-history path already
+    keys on (Req 3.1).
+
+    It performs NO signature verification: the Gateway/runtime has already
+    verified the token (issuer, client_id, signature) before it reaches the
+    runtime, so here we only need to read the ``sub`` claim. It NEVER logs the
+    token or any decode-error text (which could echo token material) — only the
+    resolved ``sub`` may be logged (Req 7.1, 7.4).
+
+    Returns the ``sub`` string when one can be decoded, otherwise ``None`` (no
+    token, a malformed token, or an absent/empty/non-string ``sub`` claim). A
+    ``None`` result drives the fail-closed memory-keying path in ``invoke``
+    (Req 2.1, 3.2): the request is NEVER keyed to a trusted per-user actor
+    derived from untrusted payload content.
+    """
+    if not isinstance(user_token, str) or not user_token:
+        return None
+
+    token = user_token.strip()
+    if token.lower().startswith("bearer "):
+        token = token[len("bearer "):].strip()
+
+    parts = token.split(".")
+    if len(parts) < 2:
+        return None
+
+    payload_segment = parts[1]
+    # Restore base64url padding that JWT encoding strips.
+    padding = "=" * (-len(payload_segment) % 4)
+    try:
+        decoded = base64.urlsafe_b64decode(payload_segment + padding)
+        claims = json.loads(decoded)
+    except (binascii.Error, ValueError, TypeError):
+        # Malformed token payload. Do NOT log — the offending text could
+        # contain token material (Req 7.1).
+        return None
+
+    if not isinstance(claims, dict):
+        return None
+
+    sub = claims.get("sub")
+    if not isinstance(sub, str) or not sub:
+        return None
+
+    logger.info(f"🔑 Resolved verified sub for memory keying: {sub}")
+    return sub
+
+
 def build_mcp_client_for_token(token: Optional[str]) -> MCPClient:
     """Create a per-request MCP client for the resolved user identity.
 
@@ -240,7 +310,7 @@ def build_mcp_client_for_token(token: Optional[str]) -> MCPClient:
     logger.info("🔧 Building MCP client with SigV4 fallback transport (no user token)")
     return MCPClient(lambda: streamablehttp_client_with_sigv4(
         url=gateway_endpoint,
-        credentials=frozen_credentials,
+        credentials=session.get_credentials(),
         service="bedrock-agentcore",
         region=AWS_REGION
     ))
@@ -260,13 +330,19 @@ def list_tools_with_pagination(client: MCPClient) -> list:
 
     The client MUST already be connected (inside its context manager).
 
-    NOTE (corrected during deployment): discovery is NOT Policy-governed, so the
-    Gateway returns the full tool catalog regardless of the user's role. The
-    forwarded user JWT determines authorization only at tool INVOCATION, where
-    AgentCore Policy (Cedar) denies categories the role may not use (Req 4.3).
-    A non-admin may therefore see a denied tool in this list but will be denied
-    when calling it. Filtering the catalog by role at discovery (Req 2.2, 3.2,
-    4.2) would require a future RESPONSE interceptor.
+    NOTE: discovery IS role-filtered at the Gateway. A discovery-filter RESPONSE
+    interceptor (``cdk/lambda/discovery-filter-interceptor/handler.py``) is
+    deployed and wired into the Gateway — registered as the RESPONSE entry in
+    ``InterceptorConfigurations`` (the ``DiscoveryFilterInterceptorFunction`` in
+    ``cdk/lib/gateway-stack.ts``, with ``PassRequestHeaders: true``). It resolves
+    the caller's role from the verified JWT ``role`` claim and removes the
+    descriptors of categories that role may not discover before the Gateway
+    replies, so the catalog this function receives is ALREADY role-filtered at
+    the Gateway (Req 2.2, 3.2, 4.2); it fails closed to an empty catalog on any
+    error, never the unfiltered list. Tool INVOCATION is independently authorized
+    by AgentCore Policy (Cedar), which denies categories the role may not use
+    (Req 4.3), so discovery filtering and invocation authorization are two
+    distinct, layered controls.
     """
     all_tools = []
     pagination_token = None
@@ -440,11 +516,26 @@ def invoke(payload, context=None):
     user_token = resolve_user_token(payload, context)
     request_mcp_client = build_mcp_client_for_token(user_token)
 
+    # Derive the per-user memory identity server-side from the verified Cognito
+    # ``sub`` claim of the resolved token — NEVER from the payload ``userId``
+    # (BUG 1 fix, Req 2.1). This reuses the same server-derived identity the
+    # DynamoDB conversation-history path already keys on (Req 3.1). When no
+    # ``sub`` resolves (token-less request), this is ``None`` and memory keying
+    # falls back to the fail-closed, non-cross-user-identifying actor below —
+    # the untrusted payload ``userId`` is never used as identity (Req 3.2).
+    verified_sub = resolve_verified_sub(user_token, context)
+
     # Per-request path: open the user's MCP client connection, discover tools
-    # through that connection (so the Gateway returns only the tools the user's
-    # role may discover), build a per-request agent with exactly those tools,
-    # and invoke it. The connection stays open for the full duration of tool
-    # discovery AND the agent run, and is closed when the `with` block exits.
+    # through that connection, build a per-request agent with exactly those
+    # tools, and invoke it. The catalog returned by discovery is already
+    # role-filtered at the Gateway by the deployed discovery-filter RESPONSE
+    # interceptor (``cdk/lambda/discovery-filter-interceptor/handler.py``, wired
+    # in as the RESPONSE entry of ``InterceptorConfigurations`` in
+    # ``cdk/lib/gateway-stack.ts``), so the Gateway returns only the tools the
+    # user's role may discover (Req 2.2, 3.2, 4.2). Tool INVOCATION is
+    # independently authorized by AgentCore Cedar Policy. The connection stays
+    # open for the full duration of tool discovery AND the agent run, and is
+    # closed when the `with` block exits.
     #
     # When the Gateway's Cedar Policy denies a tool invocation it returns an
     # AuthorizeActionException. By the time it surfaces here it may arrive as an
@@ -474,12 +565,21 @@ def invoke(payload, context=None):
             session_manager = None
             if MEMORY_ID:
                 try:
+                    # Key AgentCore Memory to the verified Cognito ``sub``
+                    # (BUG 1 fix, Req 2.1) so distinct users always get distinct
+                    # memory actors and never share one. The payload ``userId``
+                    # is NOT used as identity. When no ``sub`` resolves (token-
+                    # less request) we fail closed to a single non-cross-user-
+                    # identifying placeholder actor rather than the untrusted
+                    # payload ``userId`` (Req 3.2). ``session_id`` keying is
+                    # preserved for single-user session continuity (Req 3.3).
+                    memory_actor_id = verified_sub if verified_sub else TOKENLESS_MEMORY_ACTOR_ID
                     logger.info(f"💾 Configuring memory - Memory ID: {MEMORY_ID}, Session: {session_id}")
 
                     memory_config = AgentCoreMemoryConfig(
                         memory_id=MEMORY_ID,
                         session_id=session_id,
-                        actor_id=user_id
+                        actor_id=memory_actor_id
                     )
 
                     session_manager = AgentCoreMemorySessionManager(

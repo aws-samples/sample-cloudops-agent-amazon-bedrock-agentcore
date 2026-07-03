@@ -19,7 +19,7 @@ export class AgentCoreError extends Error {
  * Host: bedrock-agentcore.{region}.amazonaws.com
  * Content-Type: application/json
  * X-Amzn-Bedrock-AgentCore-Runtime-Session-Id: {sessionId}
- * Body: the payload string directly (which is JSON.stringify({prompt, sessionId, userId}))
+ * Body: the payload string directly (which is JSON.stringify({prompt, sessionId, accessToken?}))
  *
  * Key insight: The `payload` is sent as the RAW HTTP body (not wrapped in another JSON).
  * The `runtimeSessionId` is sent as a header, not in the body.
@@ -28,6 +28,8 @@ export class AgentCoreError extends Error {
  * (carrying the `role` claim injected by the Pre Token Generation Lambda). It is
  * conveyed to the Agent Runtime in a dedicated `accessToken` body field, which the
  * runtime forwards to the Gateway so Policy can authorize tools against the user's role.
+ * The runtime derives the per-user identity (Cognito `sub`) server-side from this
+ * token; no client-supplied `userId` is trusted as identity.
  */
 export async function invokeAgent(
   prompt: string,
@@ -67,12 +69,20 @@ export async function invokeAgent(
 
     // The payload IS the raw HTTP body — contains the data the @app.entrypoint receives
     // The backend's invoke(payload) gets this after JSON.parse.
-    // When present, the user's Cognito token is conveyed under `accessToken` so the
-    // Agent Runtime can forward it to the Gateway for role-based authorization.
+    //
+    // Identity/trust path: the user's identity is NOT taken from any client-supplied
+    // field here. It is derived server-side by the Agent Runtime from the verified
+    // Cognito `sub` claim decoded out of the forwarded `accessToken`. The runtime also
+    // forwards that token to the Gateway for role-based authorization.
+    //
+    // `userId` is retained ONLY for backward-compatible request shape and is a
+    // non-identity placeholder. The runtime does NOT trust it as identity (memory,
+    // conversation history, and authorization all key off the verified `sub`).
+    // Do not reintroduce a real/meaningful user value here.
     const body = JSON.stringify({
       prompt,
       sessionId,
-      userId: 'amplify_user',
+      userId: 'unused-identity-derived-server-side',
       ...(accessToken ? { accessToken } : {}),
     });
 

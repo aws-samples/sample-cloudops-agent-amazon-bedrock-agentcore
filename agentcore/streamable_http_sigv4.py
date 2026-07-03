@@ -6,7 +6,7 @@ Based on AWS Labs sample: run-model-context-protocol-servers-with-aws-lambda
 import httpx
 from botocore.auth import SigV4Auth
 from botocore.awsrequest import AWSRequest
-from botocore.credentials import ReadOnlyCredentials
+from botocore.credentials import Credentials
 from mcp.client.streamable_http import streamablehttp_client
 from typing import AsyncIterator
 from contextlib import asynccontextmanager
@@ -15,10 +15,13 @@ from contextlib import asynccontextmanager
 class SigV4HTTPXAuth(httpx.Auth):
     """HTTPX Auth class that signs requests with AWS SigV4"""
     
-    def __init__(self, credentials: ReadOnlyCredentials, service: str, region: str):
+    def __init__(self, credentials: Credentials, service: str, region: str):
         self.credentials = credentials
         self.service = service
         self.region = region
+        # Pass the live (refreshable) credentials object to SigV4Auth. botocore
+        # calls credentials.get_frozen_credentials() inside add_auth at signing
+        # time, which triggers a refresh when the credentials are near expiry.
         self.signer = SigV4Auth(credentials, service, region)
 
     def auth_flow(self, request: httpx.Request) -> AsyncIterator[httpx.Request]:
@@ -41,7 +44,7 @@ class SigV4HTTPXAuth(httpx.Auth):
 @asynccontextmanager
 async def streamablehttp_client_with_sigv4(
     url: str,
-    credentials: ReadOnlyCredentials,
+    credentials: Credentials,
     service: str = "bedrock-agentcore",
     region: str | None = None,
     timeout: float = 30.0
@@ -51,7 +54,7 @@ async def streamablehttp_client_with_sigv4(
     
     Args:
         url: Gateway endpoint URL
-        credentials: AWS credentials (frozen)
+        credentials: AWS credentials (refreshable; signed at request time)
         service: AWS service name (default: bedrock-agentcore)
         region: AWS region
         timeout: Request timeout in seconds

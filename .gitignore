@@ -31,3 +31,7 @@ cdk.context.json
 
 # Kiro IDE workspace (specs, skills, settings) — not published to git
 .kiro/
+
+# Threat model artifacts — not published to git
+THREAT_MODEL.md
+threat-model/
