@@ -104,13 +104,6 @@ flowchart TB
     EolScraper -->|"write EOL schedules (date-only verify, fails open)"| EOLTable
 ```
 
-> **Note on the EOL data path:** the EOL Scraper Lambda runs on a daily schedule with no VPC and
-> unrestricted outbound egress, fetching untrusted HTML from `docs.aws.amazon.com` and writing the
-> parsed end-of-support dates into the table the Inventory tools serve to users. This external-data
-> path is modeled in `THREAT_MODEL.md` as threat **T13** (data integrity) and asset **AS10**; the
-> broader unrestricted-egress posture is **T8 / A7**. Both are knowingly accepted for the
-> educational scope.
-
 ### Request Flow
 
 ```mermaid
@@ -482,8 +475,8 @@ documented trade-off for a learning project:
   `aws-eol-schedules` table that the inventory tools serve to users; its verification is date-only
   and fails open (no source pinning / authenticity check).
 
-These are knowingly accepted risks for the educational scope. See `THREAT_MODEL.md` (assumption
-A7, threats **T8** and **T13**, mitigations **M17/M20/M21**) for the full analysis.
+These are knowingly accepted trade-offs for the educational scope of this sample. A production
+deployment should complete a full security review before use.
 
 ## License
 
