@@ -27,12 +27,6 @@ export type ChatAction =
   | { type: 'RETRY_MESSAGE'; payload: { originalPrompt: string } }
   | { type: 'SET_MESSAGES'; payload: Message[] };
 
-// Session state — preserves existing localStorage pattern
-export interface SessionState {
-  sessionId: string; // format: agentcore-session-{timestamp}-{random}
-  userId: string;    // from Cognito authenticated user
-}
-
 // App config — read from localStorage("appConfig")
 export interface AppConfig {
   cognito: {
@@ -62,19 +56,6 @@ export interface AppConfig {
   conversationApi?: {
     endpoint: string; // API Gateway URL e.g. "https://xxxx.execute-api.us-east-1.amazonaws.com/prod"
   };
-}
-
-// API response from AgentCore (after JSON.parse of stream)
-export interface AgentCoreResponse {
-  result: string;
-  sessionId: string;
-  userId: string;
-}
-
-// UI state
-export interface UIState {
-  sidebarOpen: boolean;
-  isUserScrolledUp: boolean;
 }
 
 // Agent credentials passed from Amplify Auth (Cognito)

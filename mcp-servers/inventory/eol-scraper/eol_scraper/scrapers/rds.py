@@ -1,6 +1,5 @@
 """Scrape RDS/Aurora EOL dates from AWS docs + supplement with API data."""
 import logging
-import os
 import re
 import requests
 import boto3
