@@ -369,6 +369,7 @@ Each tool enriches live AWS API data with end-of-support schedules from a Dynamo
 
 - Node.js 18+ and npm
 - Python 3.12+
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) on `PATH` for CDK tests (`npm test --prefix cdk`); the OAuth regression uses it to run Python with isolated dependencies
 - AWS CLI v2 configured with credentials
 - AWS CDK v2 (`npm install -g aws-cdk`)
 - Amazon Bedrock model access enabled for the model you deploy (Claude Sonnet 4.5 by default; see "Choosing the Bedrock model")
