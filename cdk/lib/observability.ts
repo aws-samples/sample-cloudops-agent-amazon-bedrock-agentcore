@@ -8,16 +8,20 @@ export function addTracing(scope: Construct, resources: Record<string, string>):
     name: `${cdk.Stack.of(scope).stackName}-traces`,
     deliveryDestinationType: 'XRAY',
   });
+  let previousDelivery: logs.CfnDelivery | undefined;
   for (const [id, arn] of Object.entries(resources)) {
     const source = new logs.CfnDeliverySource(scope, `${id}TraceSource`, {
       name: `${cdk.Stack.of(scope).stackName}-${id}-traces`,
       resourceArn: arn,
       logType: 'TRACES',
     });
-    new logs.CfnDelivery(scope, `${id}TraceDelivery`, {
+    const delivery = new logs.CfnDelivery(scope, `${id}TraceDelivery`, {
       deliverySourceName: source.ref,
       deliveryDestinationArn: destination.attrArn,
     });
+    // CloudWatch updates shared delivery state; concurrent creates can fail NotStabilized.
+    if (previousDelivery) delivery.addDependency(previousDelivery);
+    previousDelivery = delivery;
   }
 }
 

@@ -46,6 +46,10 @@ test('Gateway, Identity and all MCP runtimes get native spans, never payload-bea
   const template = Template.fromStack(stack);
   template.resourceCountIs('AWS::Logs::DeliverySource', 13);
   template.resourceCountIs('AWS::Logs::Delivery', 13);
+  const deliveries = Object.entries(template.findResources('AWS::Logs::Delivery'));
+  for (let i = 1; i < deliveries.length; i++) {
+    expect(deliveries[i][1].DependsOn).toContain(deliveries[i - 1][0]);
+  }
   for (const resource of Object.values(template.findResources('AWS::Logs::DeliverySource'))) {
     expect(resource.Properties.LogType).toBe('TRACES');
   }
