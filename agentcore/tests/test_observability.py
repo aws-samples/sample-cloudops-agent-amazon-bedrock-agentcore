@@ -8,12 +8,10 @@ def test_export_keeps_trace_metadata_without_prompts_tokens_or_errors():
     # A subprocess isolates OpenTelemetry's set-once global provider from other tests.
     script = r'''
 from unittest.mock import patch
-import botocore.session
+import os
 from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import ExportTraceServiceRequest
-from observability import MetadataOnlySpanExporter
+from observability import configure_observability
 
 captured = []
 class Response:
@@ -28,13 +26,12 @@ def receive(_session, url, **kwargs):
     captured.append(message)
     return Response()
 
-exporter = MetadataOnlySpanExporter(
-    aws_region='us-east-1', session=botocore.session.Session(),
-    endpoint='https://xray.us-east-1.amazonaws.com/v1/traces',
-)
-provider = TracerProvider()
-provider.add_span_processor(SimpleSpanProcessor(exporter))
-trace.set_tracer_provider(provider)
+from starlette.applications import Starlette
+os.environ['AWS_REGION'] = 'us-east-1'
+os.environ['AGENTCORE_RUNTIME_URL'] = 'https://bedrock-agentcore.us-east-1.amazonaws.com/runtimes/arn%3Aaws%3Abedrock-agentcore%3Aus-east-1%3A123456789012%3Aruntime%2Fcloudops_runtime-test/invocations'
+# Exercise the production setup; substitute only its HTTP export boundary.
+configure_observability(Starlette())
+provider = trace.get_tracer_provider()
 from strands.telemetry.tracer import Tracer
 tracer = Tracer()
 with patch('requests.Session.post', receive):
@@ -72,13 +69,20 @@ with patch('requests.Session.post', receive):
     provider.force_flush()
 
 wire = '\n'.join(str(message) for message in captured)
-assert len(captured) == 5, f'Expected five exported spans, got {len(captured)}'
+assert captured, 'No spans exported'
+for resource in [resource for message in captured for resource in message.resource_spans]:
+    attrs = {a.key: a.value.string_value for a in resource.resource.attributes}
+    assert attrs['service.name'] == 'cloudops_runtime.DEFAULT', attrs
+    assert 'user.email' not in attrs
+    assert attrs['aws.service.type'] == 'gen_ai_agent', attrs
+    assert attrs['cloud.resource_id'] == 'arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/cloudops_runtime-test/runtime-endpoint/DEFAULT:DEFAULT', attrs
 for sentinel in ['TOKEN', 'UNKNOWN', 'PROMPT', 'SYSTEM', 'OUTPUT', 'TOOL_INPUT', 'TOOL_OUTPUT', 'ERROR', 'EXCEPTION']:
     assert sentinel + '_SENTINEL' not in wire, f'{sentinel} content leaked'
 for expected in ['test_tool', 'test-model', 'gen_ai.usage.input_tokens', 'test-session', 'STATUS_CODE_ERROR']:
     assert expected in wire, f'Metadata missing: {expected}'
 spans = [span for message in captured for resource in message.resource_spans
          for scope in resource.scope_spans for span in scope.spans]
+assert len(spans) == 5, f'Expected five exported spans, got {len(spans)}'
 assert len({span.trace_id for span in spans}) == 1, 'Trace correlation lost'
 assert all(not span.events for span in spans), 'Content-bearing events exported'
 assert all(not span.status.message for span in spans), 'Error text exported'

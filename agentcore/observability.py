@@ -1,9 +1,13 @@
 """Metadata-only AgentCore traces. Never export message bodies or exception text."""
 import os
+from urllib.parse import parse_qs, unquote, urlparse
 
 import botocore.session
 from amazon.opentelemetry.distro.exporter.otlp.aws.traces.otlp_aws_span_exporter import OTLPAwsSpanExporter
-from opentelemetry import trace
+from opentelemetry import propagate, trace
+from opentelemetry.propagators.aws import AwsXRayPropagator
+from opentelemetry.propagators.composite import CompositePropagator
+from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.starlette import StarletteInstrumentor
@@ -48,7 +52,26 @@ class MetadataOnlySpanExporter(OTLPAwsSpanExporter):
 def configure_observability(app):
     """Own the exporter pipeline; do not also launch via opentelemetry-instrument."""
     region = os.environ['AWS_REGION']
-    provider = TracerProvider(resource=Resource.create({}))
+    runtime_url = urlparse(os.environ['AGENTCORE_RUNTIME_URL'])
+    runtime_arn = unquote(runtime_url.path.split('/runtimes/', 1)[1].split('/invocations', 1)[0])
+    runtime_id = runtime_arn.rsplit('/', 1)[1]
+    runtime_name = runtime_id.rsplit('-', 1)[0]
+    endpoint = parse_qs(runtime_url.query).get('qualifier', ['DEFAULT'])[0]
+    # DISABLE_ADOT_OBSERVABILITY also disables the platform's OTEL resource setup.
+    # Reconstruct only trusted platform metadata, not ambient OTEL_RESOURCE_ATTRIBUTES.
+    resource = Resource({
+        'service.name': f'{runtime_name}.{endpoint}',
+        'aws.service.type': 'gen_ai_agent',
+        'cloud.provider': 'aws',
+        'cloud.platform': 'aws_bedrock_agentcore',
+        'cloud.region': region,
+        'cloud.resource_id': f'{runtime_arn}/runtime-endpoint/{endpoint}:{endpoint}',
+        'aws.log.group.names': f'/aws/bedrock-agentcore/runtimes/{runtime_id}-{endpoint}',
+    })
+    provider = TracerProvider(resource=resource)
+    propagate.set_global_textmap(CompositePropagator([
+        AwsXRayPropagator(), TraceContextTextMapPropagator(),
+    ]))
     provider.add_span_processor(BatchSpanProcessor(MetadataOnlySpanExporter(
         aws_region=region, session=botocore.session.Session(),
         endpoint=f'https://xray.{region}.amazonaws.com/v1/traces',
