@@ -34,6 +34,8 @@ configure_observability(Starlette())
 provider = trace.get_tracer_provider()
 from strands.telemetry.tracer import Tracer
 tracer = Tracer()
+from bedrock_agentcore.runtime import BedrockAgentCoreContext
+BedrockAgentCoreContext.set_request_context('test-request', 'test-session')
 with patch('requests.Session.post', receive):
     parent = trace.get_tracer('test').start_span('request', attributes={
         'session.id': 'test-session', 'http.request.header.authorization': 'TOKEN_SENTINEL',
@@ -65,6 +67,11 @@ with patch('requests.Session.post', receive):
     )
     tracer.end_tool_call_span(failed, {'toolUseId': 'tool-2', 'status': 'error',
         'content': [{'text': 'ERROR_SENTINEL'}]}, error=RuntimeError('EXCEPTION_SENTINEL'))
+    with trace.use_span(parent):
+        # Botocore model CLIENT spans are what the console counts for usage.
+        with trace.get_tracer('botocore').start_as_current_span('ConverseStream', kind=trace.SpanKind.CLIENT) as client:
+            client.set_attribute('gen_ai.usage.input_tokens', 5)
+            client.set_attribute('gen_ai.usage.output_tokens', 3)
     parent.end()
     provider.force_flush()
 
@@ -82,7 +89,13 @@ for expected in ['test_tool', 'test-model', 'gen_ai.usage.input_tokens', 'test-s
     assert expected in wire, f'Metadata missing: {expected}'
 spans = [span for message in captured for resource in message.resource_spans
          for scope in resource.scope_spans for span in scope.spans]
-assert len(spans) == 5, f'Expected five exported spans, got {len(spans)}'
+assert len(spans) == 6, f'Expected six exported spans, got {len(spans)}'
+for span in spans:
+    attrs = {a.key: a.value for a in span.attributes}
+    assert attrs['session.id'].string_value == 'test-session', 'Session missing on a child/model span'
+client_spans = [s for s in spans if s.kind == 3]  # OTLP SpanKind.CLIENT
+assert sum(next(a.value.int_value for a in s.attributes if a.key == 'gen_ai.usage.input_tokens')
+           for s in client_spans) == 5, 'Console-counted model usage missing'
 assert len({span.trace_id for span in spans}) == 1, 'Trace correlation lost'
 assert all(not span.events for span in spans), 'Content-bearing events exported'
 assert all(not span.status.message for span in spans), 'Error text exported'

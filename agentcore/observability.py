@@ -3,6 +3,7 @@ import os
 from urllib.parse import parse_qs, unquote, urlparse
 
 import botocore.session
+from bedrock_agentcore.runtime import BedrockAgentCoreContext
 from amazon.opentelemetry.distro.exporter.otlp.aws.traces.otlp_aws_span_exporter import OTLPAwsSpanExporter
 from opentelemetry import propagate, trace
 from opentelemetry.propagators.aws import AwsXRayPropagator
@@ -12,7 +13,7 @@ from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.starlette import StarletteInstrumentor
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import ReadableSpan, TracerProvider
+from opentelemetry.sdk.trace import ReadableSpan, SpanProcessor, TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.trace import Status
 
@@ -25,10 +26,21 @@ METADATA_ATTRIBUTES = frozenset({
     'gen_ai.usage.input_tokens', 'gen_ai.usage.output_tokens',
     'gen_ai.usage.total_tokens', 'gen_ai.usage.prompt_tokens',
     'gen_ai.usage.completion_tokens', 'gen_ai.event.start_time', 'gen_ai.event.end_time',
+    'gen_ai.usage.cache_read.input_tokens', 'gen_ai.usage.cache_write.input_tokens',
+    'gen_ai.usage.cache_read_input_tokens', 'gen_ai.usage.cache_write_input_tokens',
     'http.method', 'http.request.method', 'http.status_code', 'http.response.status_code',
     'http.route', 'rpc.system', 'rpc.service', 'rpc.method', 'aws.region',
     'aws.request_id', 'aws.request.id', 'server.address', 'server.port',
 })
+
+
+class SessionSpanProcessor(SpanProcessor):
+    """Attach session identity before export runs on a different thread."""
+
+    def on_start(self, span, parent_context=None):
+        session_id = BedrockAgentCoreContext.get_session_id()
+        if session_id:
+            span.set_attribute('session.id', session_id)
 
 
 class MetadataOnlySpanExporter(OTLPAwsSpanExporter):
@@ -69,6 +81,7 @@ def configure_observability(app):
         'aws.log.group.names': f'/aws/bedrock-agentcore/runtimes/{runtime_id}-{endpoint}',
     })
     provider = TracerProvider(resource=resource)
+    provider.add_span_processor(SessionSpanProcessor())
     propagate.set_global_textmap(CompositePropagator([
         AwsXRayPropagator(), TraceContextTextMapPropagator(),
     ]))
