@@ -6,6 +6,7 @@ import * as cr from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 import * as path from 'path';
 import { NagSuppressions } from 'cdk-nag';
+import { addTracing, workloadIdentityArn } from './observability';
 
 export interface AgentCoreGatewayStackProps extends cdk.StackProps {
   // MCP Runtime endpoints from MCPRuntimeStack
@@ -128,7 +129,7 @@ def send_cfn_response(event, status, data=None, reason=None, physical_id=None):
     urllib.request.urlopen(req)
 
 def handler(event, context):
-    logger.info(f'Event: {json.dumps(event)}')
+    logger.info('Request type: %s', event['RequestType'])
     request_type = event['RequestType']
     props = event['ResourceProperties']
     provider_name = props.get('ProviderName', '')
@@ -630,11 +631,8 @@ def handler(event, context):
     //     true. The Gateway verifies the JWT before invoking the interceptor;
     //     the handler decodes (does not verify) it solely to read `sub`/`role`
     //     and never logs the token.
-    //   * AgentCore Policy also has native deny observability (metrics + trace
-    //     spans). Per design Note 4 we use the interceptor as the single
-    //     canonical four-field audit entry and do NOT also enable a competing
-    //     native-observability audit sink, keeping "exactly one audit entry"
-    //     per deny (Req 8.3).
+    //   * Native service spans complement, but do not duplicate, the canonical
+    //     four-field deny-audit record. Do not enable payload-bearing application logs.
     // See cdk/lambda/deny-audit-interceptor/README.md for the full research log.
     // ========================================
 
@@ -781,6 +779,23 @@ def handler(event, context):
     this.gatewayArn = gateway.getAtt('GatewayArn').toString();
     const gatewayId = gateway.getAtt('GatewayIdentifier').toString();
     this.gatewayUrl = gateway.getAtt('GatewayUrl').toString();
+
+    const tracedResources: Record<string, string> = {
+      Gateway: this.gatewayArn,
+      GatewayIdentity: workloadIdentityArn(this, this.gatewayArn),
+      OAuthProvider: oauthProviderArn,
+    };
+    for (const [name, arn] of Object.entries({
+      Billing: props.billingMcpRuntimeArn,
+      Pricing: props.pricingMcpRuntimeArn,
+      CloudWatch: props.cloudwatchMcpRuntimeArn,
+      CloudTrail: props.cloudtrailMcpRuntimeArn,
+      Inventory: props.inventoryMcpRuntimeArn,
+    })) {
+      tracedResources[name] = arn;
+      tracedResources[`${name}Identity`] = workloadIdentityArn(this, arn);
+    }
+    addTracing(this, tracedResources);
 
     // ========================================
     // Gateway Targets (MCP Server endpoints)

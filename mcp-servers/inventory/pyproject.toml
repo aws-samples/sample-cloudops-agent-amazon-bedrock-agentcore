@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "MCP Server for AWS inventory software version management (EKS, RDS, OpenSearch, ElastiCache, MSK)"
 requires-python = ">=3.10"
 dependencies = [
-    "mcp>=1.2.0",
+    "mcp>=1.10.0,<2",
     "boto3>=1.35.0",
     "uvicorn>=0.27.0",
     "starlette>=0.36.0",

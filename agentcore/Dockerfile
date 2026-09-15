@@ -31,6 +31,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
 COPY agent_runtime.py .
+COPY observability.py .
 COPY streamable_http_sigv4.py .
 # Bearer transport (per-user JWT forwarding) and the pure authorization model
 # (role derivation + denial-response helpers) are imported by agent_runtime.py.
@@ -43,6 +44,10 @@ RUN chown -R appuser:appuser /app
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+# One explicitly configured, metadata-only exporter; never add an unfiltered pipeline.
+ENV DISABLE_ADOT_OBSERVABILITY=true
+ENV OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=false
+ENV OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental,gen_ai_unredacted_attributes=
 
 # Switch to non-root user
 USER appuser

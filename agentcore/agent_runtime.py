@@ -533,6 +533,8 @@ def invoke(payload, context=None):
                 "model": model,
                 "tools": request_tools,
                 "system_prompt": system_prompt_template,
+                "callback_handler": None,  # Do not print model/tool content into runtime logs.
+                "trace_attributes": {"session.id": session_id},
             }
             if session_manager is not None:
                 agent_kwargs["session_manager"] = session_manager
@@ -593,6 +595,8 @@ def invoke(payload, context=None):
 
 
 if __name__ == "__main__":
+    from observability import configure_observability
+    configure_observability(app)
     logger.info("🚀 Starting CloudOps Agent Runtime with BedrockAgentCoreApp")
     logger.info(f"📊 Model: {MODEL_ID}")
     logger.info(f"🌐 Gateway: {gateway_endpoint}")

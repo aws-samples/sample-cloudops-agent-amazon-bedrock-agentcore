@@ -10,8 +10,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=mcp-source.conf
 . "${SCRIPT_DIR}/mcp-source.conf"
 
-echo "Cloning upstream MCP repository (${MCP_REPO_URL})..."
-git clone --depth 1 "${MCP_REPO_URL}"
+echo "Fetching upstream MCP repository (${MCP_REPO_URL}@${MCP_REPO_REF})..."
+git init -q mcp
+git -C mcp fetch --depth 1 "${MCP_REPO_URL}" "${MCP_REPO_REF}"
+git -C mcp checkout --detach FETCH_HEAD
 cd mcp/src/billing-cost-management-mcp-server
 
 SERVER_FILE="awslabs/billing_cost_management_mcp_server/server.py"
@@ -19,7 +21,7 @@ SERVER_FILE="awslabs/billing_cost_management_mcp_server/server.py"
 # Patch server.py
 echo "Patching server.py..."
 
-python3 -c "
+uv run --no-project --python 3.13 python -c "
 import re
 
 with open('$SERVER_FILE', 'r') as f:
@@ -66,8 +68,8 @@ grep -q 'streamable-http' "$SERVER_FILE" || { echo "ERROR: streamable-http not f
 grep -q 'port=8000' "$SERVER_FILE" || { echo "ERROR: port=8000 not found in server.py"; exit 1; }
 echo "server.py patch verified."
 
-# No need to add uvicorn/starlette — fastmcp handles streamable-http transport internally
-echo "Dependencies: fastmcp handles streamable-http transport natively."
+# Keep the APIs used by setup() and the transport patch on compatible majors.
+uv add --python 3.13 --no-sync 'mcp[cli]>=1.23.0,<2' 'fastmcp>=3.4.3,<4'
 
 # Disable UV_FROZEN in Dockerfile
 echo "Disabling UV_FROZEN in Dockerfile..."

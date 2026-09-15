@@ -10,8 +10,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=mcp-source.conf
 . "${SCRIPT_DIR}/mcp-source.conf"
 
-echo "Cloning upstream MCP repository (${MCP_REPO_URL})..."
-git clone --depth 1 "${MCP_REPO_URL}"
+echo "Fetching upstream MCP repository (${MCP_REPO_URL}@${MCP_REPO_REF})..."
+git init -q mcp
+git -C mcp fetch --depth 1 "${MCP_REPO_URL}" "${MCP_REPO_REF}"
+git -C mcp checkout --detach FETCH_HEAD
 cd mcp/src/cloudtrail-mcp-server
 
 # Patch server.py
@@ -22,7 +24,7 @@ cd mcp/src/cloudtrail-mcp-server
 # 2. Change mcp.run() to mcp.run(transport='streamable-http')
 echo "Patching server.py..."
 
-python3 << 'PYEOF'
+uv run --no-project --python 3.13 python << 'PYEOF'
 import re
 
 with open("awslabs/cloudtrail_mcp_server/server.py", "r") as f:
@@ -87,33 +89,8 @@ grep -q "mcp.settings.host" "awslabs/cloudtrail_mcp_server/server.py" || { echo 
 grep -q "mcp.settings.port = 8000" "awslabs/cloudtrail_mcp_server/server.py" || { echo "ERROR: port=8000 not found in server.py"; exit 1; }
 echo "server.py patch verified."
 
-# No need to add fastmcp dependency - we use the mcp SDK's built-in FastMCP
-# which already supports streamable-http transport with host/port params.
-# Just need to ensure uvicorn and starlette are available for the transport.
-echo "Adding uvicorn/starlette dependencies for streamable-http transport..."
-python3 -c "
-with open('pyproject.toml', 'r') as f:
-    content = f.read()
-
-import re
-# Add uvicorn and starlette which are needed for streamable-http transport
-content = re.sub(
-    r'(dependencies\s*=\s*\[)',
-    r'\1\n    \"uvicorn>=0.27.0\",\n    \"starlette>=0.36.0\",',
-    content,
-    count=1
-)
-
-with open('pyproject.toml', 'w') as f:
-    f.write(content)
-print('uvicorn/starlette dependencies added to pyproject.toml')
-"
-grep -q 'uvicorn' pyproject.toml || { echo "ERROR: uvicorn not in pyproject.toml"; exit 1; }
-# Install uv and regenerate lockfile with the new dependencies
-echo "Regenerating uv.lock..."
-pip3 install uv --quiet 2>/dev/null || python3 -m pip install uv --quiet
-uv lock --python 3.13
-echo "pyproject.toml patch verified, lockfile regenerated."
+# The patched server uses the MCP v1 FastMCP API.
+uv add --python 3.13 --no-sync 'mcp[cli]>=1.23.0,<2' 'uvicorn>=0.27.0' 'starlette>=0.36.0'
 
 # Disable UV_FROZEN in Dockerfile and remove --frozen from uv sync
 echo "Disabling UV_FROZEN and --frozen in Dockerfile..."

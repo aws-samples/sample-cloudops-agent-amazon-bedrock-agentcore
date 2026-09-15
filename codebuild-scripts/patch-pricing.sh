@@ -10,8 +10,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=mcp-source.conf
 . "${SCRIPT_DIR}/mcp-source.conf"
 
-echo "Cloning upstream MCP repository (${MCP_REPO_URL})..."
-git clone --depth 1 "${MCP_REPO_URL}"
+echo "Fetching upstream MCP repository (${MCP_REPO_URL}@${MCP_REPO_REF})..."
+git init -q mcp
+git -C mcp fetch --depth 1 "${MCP_REPO_URL}" "${MCP_REPO_REF}"
+git -C mcp checkout --detach FETCH_HEAD
 cd mcp/src/aws-pricing-mcp-server
 
 SERVER_FILE="awslabs/aws_pricing_mcp_server/server.py"
@@ -22,7 +24,7 @@ SERVER_FILE="awslabs/aws_pricing_mcp_server/server.py"
 # package instead, so both servers work identically.
 echo "Patching server.py..."
 
-python3 -c "
+uv run --no-project --python 3.13 python -c "
 import re
 
 with open('$SERVER_FILE', 'r') as f:
@@ -106,7 +108,7 @@ echo "server.py patch verified."
 
 # Step 4c: Insert dict-to-model conversion code inside get_pricing function
 # This must be done outside the python3 -c block to avoid bash escaping issues
-python3 << 'PYEOF'
+uv run --no-project --python 3.13 python << 'PYEOF'
 with open("awslabs/aws_pricing_mcp_server/server.py", "r") as f:
     content = f.read()
 
@@ -126,30 +128,8 @@ with open("awslabs/aws_pricing_mcp_server/server.py", "w") as f:
 print("Added dict-to-model conversion inside get_pricing")
 PYEOF
 
-# Add fastmcp dependency to pyproject.toml and regenerate lockfile
-echo "Adding fastmcp dependency..."
-python3 -c "
-with open('pyproject.toml', 'r') as f:
-    content = f.read()
-
-import re
-content = re.sub(
-    r'(dependencies\s*=\s*\[)',
-    r'\1\n    \"fastmcp>=2.0.0,<3.0.0\",',
-    content,
-    count=1
-)
-
-with open('pyproject.toml', 'w') as f:
-    f.write(content)
-print('fastmcp dependency added to pyproject.toml')
-"
-grep -q 'fastmcp' pyproject.toml || { echo "ERROR: fastmcp not in pyproject.toml"; exit 1; }
-# Install uv and regenerate lockfile with the new dependency
-echo "Regenerating uv.lock with fastmcp dependency..."
-pip3 install uv --quiet 2>/dev/null || python3 -m pip install uv --quiet
-uv lock --python 3.13
-echo "pyproject.toml patch verified, lockfile regenerated."
+# Keep MCP v1 and the standalone FastMCP API used by the patch.
+uv add --python 3.13 --no-sync 'mcp[cli]>=1.23.0,<2' 'fastmcp>=2.14.0,<3'
 
 # Disable UV_FROZEN in Dockerfile and remove --frozen from uv sync
 echo "Disabling UV_FROZEN and --frozen in Dockerfile..."

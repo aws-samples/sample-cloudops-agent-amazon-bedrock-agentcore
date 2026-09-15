@@ -289,13 +289,73 @@ Deploy via `npx cdk deploy --all` from the `cdk/` directory. Six stacks are prov
 
 The Billing, Pricing, CloudWatch, and CloudTrail MCP server images are built by cloning the public [`awslabs/mcp`](https://github.com/awslabs/mcp) repository and patching it for streamable-HTTP transport (see `ImageStack`).
 
-The external repository URL is **centralized in a single config file** rather than duplicated across the four patch scripts:
+The upstream repository and revision are **centralized in a single config file** rather than duplicated across the four patch scripts:
 
-- `codebuild-scripts/mcp-source.conf` — defines `MCP_REPO_URL`
+- `codebuild-scripts/mcp-source.conf` — defines `MCP_REPO_URL` and the immutable `MCP_REPO_REF`.
 
-Each of the four patch scripts (`patch-billing.sh`, `patch-cloudtrail.sh`, `patch-cloudwatch.sh`, `patch-pricing.sh`) sources this file and clones `${MCP_REPO_URL}`. To point the build at a fork or an internal mirror, change **only** `mcp-source.conf` — the scripts do not hard-code the URL. The config is uploaded to the CodeBuild source bucket alongside the scripts automatically.
+Each patch script fetches that exact revision, then constrains MCP to v1 before regenerating the upstream lockfile. Billing uses standalone FastMCP v3; Pricing uses v2. These match the APIs in the pinned source. To use a fork or upgrade upstream, update `mcp-source.conf` and run `bash scripts/test-mcp-patches.sh` first. This Docker-based check applies all four real patches and verifies tool discovery over HTTP without AWS credentials; it does not build the production images or validate AWS permissions. The config is uploaded to CodeBuild alongside the scripts automatically.
 
 > The patch scripts apply an **exact-text patch** to each upstream `server.py` (`def main()` → streamable-HTTP); if the upstream source changes that block, the script fails fast with a clear error. The Inventory MCP server is **not** affected — it builds from local source in `mcp-servers/inventory/`, not from a clone.
+
+### Observability
+
+Enable [CloudWatch Transaction Search](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-configure.html#observability-configure-enable)
+**once per account and Region before deployment**, including its X-Ray log resource policy.
+Confirm `aws xray get-trace-segment-destination --region <region>` reports
+`Destination: CloudWatchLogs` and `Status: ACTIVE`. This sample does not change
+account-wide sampling, retention, or existing Transaction Search policies.
+
+The CDK stacks enable native traces for the six runtimes, Gateway, Memory,
+their runtime/Gateway workload identities, and the OAuth credential provider.
+The main agent configures ADOT's SigV4 exporter in `agentcore/observability.py`,
+with Starlette, HTTPX, botocore, and Strands instrumentation. It exports only
+allowlisted metadata: model/tool names, status codes, timing, token usage, and
+session/trace correlation. Message contents, tool inputs/results, span events,
+exception text, and HTTP headers are excluded **before** export. The Strands
+console callback is disabled so generated responses are not copied to stdout.
+
+Do not replace the container command with `opentelemetry-instrument`: the app
+owns one filtered exporter; a second default exporter could capture secrets.
+Do not enable vended `APPLICATION_LOGS` with default fields: runtime payloads
+contain `accessToken`, and Gateway logs can contain private tool bodies. Native
+service spans contain metadata, while the existing four-field deny-audit log
+remains the canonical deny record. No authorization policies are changed.
+
+Agent and service spans use the shared `aws/spans` log group. The main runtime
+explicitly opts out of the newer unified destination, avoiding a new
+`logs:PutResourcePolicy` permission on its execution role. Review retention and
+reader permissions on `aws/spans`; they remain controlled by the account owner.
+Metadata still includes AWS resource identifiers and session identifiers. This
+metadata-only mode intentionally cannot support evaluations that require full
+conversation content. MCP server internals are not auto-instrumented; their
+native runtime spans and the agent's tool spans cover calls across that boundary.
+
+Verify after deploying:
+
+1. Sign in, click **New Conversation**, and ask for a CloudWatch alarm check as
+   an admin. Repeat as a non-admin; operational access must remain denied.
+2. In **CloudWatch → GenAI Observability / Transaction Search**, select the
+   deployed agent and time window. Confirm nonempty agent, model, and tool spans,
+   session correlation, Gateway spans, and Identity token-fetch spans. Some
+   requests may use cached OAuth tokens; test a fresh session if needed.
+3. Query `aws/spans` and the runtime log group for the test window. Verify that
+   neither the test JWT nor a unique marker placed in the prompt/tool arguments
+   appears. Inspect both success and denial paths. An empty log stream is not
+   evidence of working tracing.
+4. Recheck the deny-audit log: one record per denied operational invocation,
+   with `{identityRef, category, outcome, timestamp}` only.
+
+Local regression checks (no AWS calls):
+
+```bash
+uv run --with-requirements agentcore/requirements.txt --with pytest python -m pytest agentcore/tests/test_observability.py
+npm run build --prefix cdk
+npm test --prefix cdk -- --runInBand
+```
+
+The telemetry regression sends real Strands spans through the exporter and
+inspects serialized OTLP at the HTTP boundary, including a tool error containing
+a secret sentinel. Re-run it before upgrading the pinned ADOT distribution.
 
 ### Choosing the Bedrock model
 
@@ -369,6 +429,7 @@ Each tool enriches live AWS API data with end-of-support schedules from a Dynamo
 
 - Node.js 18+ and npm
 - Python 3.12+
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) on `PATH` for CDK tests (`npm test --prefix cdk`); the OAuth regression uses it to run Python with isolated dependencies
 - AWS CLI v2 configured with credentials
 - AWS CDK v2 (`npm install -g aws-cdk`)
 - Amazon Bedrock model access enabled for the model you deploy (Claude Sonnet 4.5 by default; see "Choosing the Bedrock model")
