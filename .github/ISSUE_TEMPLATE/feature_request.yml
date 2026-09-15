@@ -1,0 +1,34 @@
+name: Feature request
+description: Propose an improvement to the CloudOps Agent sample.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues before submitting. Describe the user need and observable outcome.
+        Redact credentials, account identifiers, and private customer information.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Who needs this, what task are they trying to complete, and what gets in the way today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-outcome
+    attributes:
+      label: Proposed outcome
+      description: What should the user be able to do? Include concrete success criteria.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe existing features, workarounds, or other approaches considered. State if none were considered.
+    validations:
+      required: true
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add related issues, examples, or constraints such as compatibility, security, or cost.

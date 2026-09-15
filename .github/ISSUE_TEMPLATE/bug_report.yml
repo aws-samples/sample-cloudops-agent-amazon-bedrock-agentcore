@@ -1,0 +1,66 @@
+name: Bug report
+description: Report a reproducible problem with the CloudOps Agent sample.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues before submitting. Distinguish live deployment failures from local checks.
+        Redact credentials, tokens, account IDs, private URLs, and personal data from commands and logs.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is broken, and how does it affect you?
+    validations:
+      required: true
+  - type: input
+    id: tested-revision
+    attributes:
+      label: Tested revision
+      description: Provide the commit hash or release tested, and note any local changes.
+      placeholder: Commit hash or release tag
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include the test date, affected component, AWS region if applicable, and relevant tool versions. State whether this was a live deployment or a local check.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Reproduction steps
+      description: List the prerequisites and exact commands or actions needed to reproduce the problem.
+      placeholder: |
+        1. Configure...
+        2. Run...
+        3. Observe...
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: What should happen?
+    validations:
+      required: true
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual behavior
+      description: What happened instead? Include the failing step and observable impact.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Redacted logs
+      description: Paste the relevant error output only. Use synthetic values instead of secrets.
+      render: text
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Include related issues, confirmed causes, workarounds, or limitations of the evidence. Separate observations from hypotheses.
