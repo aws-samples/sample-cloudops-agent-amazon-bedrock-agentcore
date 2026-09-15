@@ -4,6 +4,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
 import { Construct } from 'constructs';
 import { NagSuppressions } from 'cdk-nag';
+import { addTracing, workloadIdentityArn } from './observability';
 
 export interface AgentRuntimeStackProps extends cdk.StackProps {
   repository: ecr.IRepository;
@@ -156,6 +157,13 @@ export class AgentRuntimeStack extends cdk.Stack {
         MODEL_ID: foundationModel,
         AWS_REGION: this.region,
         GATEWAY_ARN: props.gatewayArn,
+        // The application owns a filtered exporter; a second ADOT pipeline could leak payloads.
+        DISABLE_ADOT_OBSERVABILITY: 'true',
+        AGENT_OBSERVABILITY_ENABLED: 'true',
+        OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT: 'false',
+        OTEL_SEMCONV_STABILITY_OPT_IN: 'gen_ai_latest_experimental,gen_ai_unredacted_attributes=',
+        // Use the existing regional Transaction Search destination without changing its policy.
+        UNIFIED_TRACES_DESTINATION_ENABLED: 'false',
         DEPLOYMENT_TIMESTAMP: new Date().toISOString(),
         FORCE_REBUILD: `${Date.now()}`,
       },
@@ -167,6 +175,12 @@ export class AgentRuntimeStack extends cdk.Stack {
     this.mainRuntimeArn = runtime.agentRuntimeArn;
     this.mainRuntimeRole = runtimeRole;
     this.mainRuntimeRoleArn = runtimeRole.roleArn;
+
+    addTracing(this, {
+      Runtime: runtime.agentRuntimeArn,
+      RuntimeIdentity: workloadIdentityArn(this, runtime.agentRuntimeArn),
+      Memory: memory.memoryArn,
+    });
 
     // ========================================
     // Outputs

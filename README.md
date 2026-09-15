@@ -297,6 +297,66 @@ Each patch script fetches that exact revision, then constrains MCP to v1 before 
 
 > The patch scripts apply an **exact-text patch** to each upstream `server.py` (`def main()` → streamable-HTTP); if the upstream source changes that block, the script fails fast with a clear error. The Inventory MCP server is **not** affected — it builds from local source in `mcp-servers/inventory/`, not from a clone.
 
+### Observability
+
+Enable [CloudWatch Transaction Search](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-configure.html#observability-configure-enable)
+**once per account and Region before deployment**, including its X-Ray log resource policy.
+Confirm `aws xray get-trace-segment-destination --region <region>` reports
+`Destination: CloudWatchLogs` and `Status: ACTIVE`. This sample does not change
+account-wide sampling, retention, or existing Transaction Search policies.
+
+The CDK stacks enable native traces for the six runtimes, Gateway, Memory,
+their runtime/Gateway workload identities, and the OAuth credential provider.
+The main agent configures ADOT's SigV4 exporter in `agentcore/observability.py`,
+with Starlette, HTTPX, botocore, and Strands instrumentation. It exports only
+allowlisted metadata: model/tool names, status codes, timing, token usage, and
+session/trace correlation. Message contents, tool inputs/results, span events,
+exception text, and HTTP headers are excluded **before** export. The Strands
+console callback is disabled so generated responses are not copied to stdout.
+
+Do not replace the container command with `opentelemetry-instrument`: the app
+owns one filtered exporter; a second default exporter could capture secrets.
+Do not enable vended `APPLICATION_LOGS` with default fields: runtime payloads
+contain `accessToken`, and Gateway logs can contain private tool bodies. Native
+service spans contain metadata, while the existing four-field deny-audit log
+remains the canonical deny record. No authorization policies are changed.
+
+Agent and service spans use the shared `aws/spans` log group. The main runtime
+explicitly opts out of the newer unified destination, avoiding a new
+`logs:PutResourcePolicy` permission on its execution role. Review retention and
+reader permissions on `aws/spans`; they remain controlled by the account owner.
+Metadata still includes AWS resource identifiers and session identifiers. This
+metadata-only mode intentionally cannot support evaluations that require full
+conversation content. MCP server internals are not auto-instrumented; their
+native runtime spans and the agent's tool spans cover calls across that boundary.
+
+Verify after deploying:
+
+1. Sign in, click **New Conversation**, and ask for a CloudWatch alarm check as
+   an admin. Repeat as a non-admin; operational access must remain denied.
+2. In **CloudWatch → GenAI Observability / Transaction Search**, select the
+   deployed agent and time window. Confirm nonempty agent, model, and tool spans,
+   session correlation, Gateway spans, and Identity token-fetch spans. Some
+   requests may use cached OAuth tokens; test a fresh session if needed.
+3. Query `aws/spans` and the runtime log group for the test window. Verify that
+   neither the test JWT nor a unique marker placed in the prompt/tool arguments
+   appears. Inspect both success and denial paths. An empty log stream is not
+   evidence of working tracing.
+4. Recheck the deny-audit log: one record per denied operational invocation,
+   with `{identityRef, category, outcome, timestamp}` only.
+
+Local regression checks (no AWS calls):
+
+```bash
+uv run --with-requirements agentcore/requirements.txt --with pytest python -m pytest agentcore/tests/test_observability.py
+npm run build --prefix cdk
+npm test --prefix cdk -- --runInBand
+```
+
+The telemetry regression sends real Strands spans through the exporter and
+inspects serialized OTLP at the HTTP boundary, including a tool error containing
+a secret sentinel. Re-run it before upgrading the pinned ADOT distribution.
+
 ### Choosing the Bedrock model
 
 The agent's model is configurable at deploy time — you do **not** need to edit the stack. Set it via an environment variable or CDK context before deploying:
