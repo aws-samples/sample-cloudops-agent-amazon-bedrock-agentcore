@@ -128,7 +128,7 @@ def send_cfn_response(event, status, data=None, reason=None, physical_id=None):
     urllib.request.urlopen(req)
 
 def handler(event, context):
-    logger.info(f'Event: {json.dumps(event)}')
+    logger.info('Request type: %s', event['RequestType'])
     request_type = event['RequestType']
     props = event['ResourceProperties']
     provider_name = props.get('ProviderName', '')

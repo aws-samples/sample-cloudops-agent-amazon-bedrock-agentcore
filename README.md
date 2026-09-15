@@ -289,11 +289,11 @@ Deploy via `npx cdk deploy --all` from the `cdk/` directory. Six stacks are prov
 
 The Billing, Pricing, CloudWatch, and CloudTrail MCP server images are built by cloning the public [`awslabs/mcp`](https://github.com/awslabs/mcp) repository and patching it for streamable-HTTP transport (see `ImageStack`).
 
-The external repository URL is **centralized in a single config file** rather than duplicated across the four patch scripts:
+The upstream repository and revision are **centralized in a single config file** rather than duplicated across the four patch scripts:
 
-- `codebuild-scripts/mcp-source.conf` — defines `MCP_REPO_URL`
+- `codebuild-scripts/mcp-source.conf` — defines `MCP_REPO_URL` and the immutable `MCP_REPO_REF`.
 
-Each of the four patch scripts (`patch-billing.sh`, `patch-cloudtrail.sh`, `patch-cloudwatch.sh`, `patch-pricing.sh`) sources this file and clones `${MCP_REPO_URL}`. To point the build at a fork or an internal mirror, change **only** `mcp-source.conf` — the scripts do not hard-code the URL. The config is uploaded to the CodeBuild source bucket alongside the scripts automatically.
+Each patch script fetches that exact revision, then constrains MCP to v1 before regenerating the upstream lockfile. Billing uses standalone FastMCP v3; Pricing uses v2. These match the APIs in the pinned source. To use a fork or upgrade upstream, update `mcp-source.conf` and run `bash scripts/test-mcp-patches.sh` first. This Docker-based check applies all four real patches and verifies tool discovery over HTTP without AWS credentials; it does not build the production images or validate AWS permissions. The config is uploaded to CodeBuild alongside the scripts automatically.
 
 > The patch scripts apply an **exact-text patch** to each upstream `server.py` (`def main()` → streamable-HTTP); if the upstream source changes that block, the script fails fast with a clear error. The Inventory MCP server is **not** affected — it builds from local source in `mcp-servers/inventory/`, not from a clone.
 

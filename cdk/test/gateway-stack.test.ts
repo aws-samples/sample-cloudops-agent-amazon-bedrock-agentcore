@@ -1,4 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
+import { execFileSync } from 'child_process';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { AgentCoreGatewayStack } from '../lib/gateway-stack';
 
@@ -62,6 +63,43 @@ describe('AgentCoreGatewayStack', () => {
     }
     return [];
   }
+
+  test('OAuth handler completes requests without logging secrets', () => {
+    const functions = template.findResources('AWS::Lambda::Function');
+    const provider = Object.entries(functions).find(([id]) => id.startsWith('OAuthProviderFunction'));
+    expect(provider).toBeDefined();
+    const code = provider![1].Properties.Code.ZipFile;
+    execFileSync('uv', ['run', '--with', 'boto3', 'python', '-c', `
+import io, json, logging, sys
+from unittest.mock import patch, MagicMock
+namespace = {}
+exec(sys.stdin.read(), namespace)
+event = {
+    'RequestType': 'Create', 'RequestId': 'test', 'StackId': 'test',
+    'LogicalResourceId': 'OAuthProvider',
+    'ResponseURL': 'https://example.com/SECRET_RESPONSE_URL',
+    'ResourceProperties': {'ProviderName': 'test', 'ClientSecret': 'SECRET_SENTINEL'},
+}
+client = MagicMock()
+client.create_oauth2_credential_provider.return_value = {
+    'credentialProviderArn': 'provider', 'clientSecretArn': {'secretArn': 'secret'},
+}
+for request_type in ('Create', 'Update', 'Delete'):
+    output = io.StringIO()
+    handler = logging.StreamHandler(output)
+    logging.getLogger().addHandler(handler)
+    event['RequestType'] = request_type
+    try:
+        with patch('boto3.client', return_value=client), patch('urllib.request.urlopen') as send:
+            namespace['handler'](event, None)
+            response = json.loads(send.call_args.args[0].data)
+            assert response['Status'] == 'SUCCESS', response
+        assert 'SECRET_SENTINEL' not in output.getvalue(), 'Client secret leaked'
+        assert 'SECRET_RESPONSE_URL' not in output.getvalue(), 'Response URL leaked'
+    finally:
+        logging.getLogger().removeHandler(handler)
+`], { input: code, stdio: ['pipe', 'pipe', 'pipe'] });
+  }, 60000);
 
   test('Gateway uses CUSTOM_JWT inbound authorization (Req 1.5)', () => {
     template.hasResourceProperties('AWS::BedrockAgentCore::Gateway', {
