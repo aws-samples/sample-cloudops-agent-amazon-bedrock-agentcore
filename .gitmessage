@@ -1,0 +1,12 @@
+
+# Subject: imperative mood, fewer than 70 characters, no trailing period.
+# Example: Pin MCP dependencies to the supported major version
+#
+# Leave a blank line after the subject. Explain WHY the change is needed,
+# not just what the diff does. Wrap body lines at 72 characters.
+#
+# Mention behavior changes, compatibility concerns, or rollout risks if relevant.
+# Record the checks run and their results; identify anything not tested.
+#
+# Reference related issues when relevant: Refs #123 or Fixes #123.
+# Remove these hints or let Git strip them when saving the message.
