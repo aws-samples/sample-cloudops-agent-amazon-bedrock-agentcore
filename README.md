@@ -1,4 +1,4 @@
-# CloudOps agents on Amazon Bedrock AgentCore
+# CloudOps agent on Amazon Bedrock AgentCore
 
 Build and deploy a CloudOps agent on Amazon Bedrock AgentCore. This AWS sample brings together managed agent hosting, MCP tools, identity propagation, policy-enforced tool access, session memory, and metadata-only observability in six AWS CDK stacks—with a React app for exploring cost, monitoring, audit, and inventory questions.
 
@@ -6,7 +6,7 @@ Build and deploy a CloudOps agent on Amazon Bedrock AgentCore. This AWS sample b
 [![Amazon Bedrock AgentCore](https://img.shields.io/badge/Amazon_Bedrock-AgentCore-232F3E)](https://aws.amazon.com/bedrock/agentcore/)
 [![AWS CDK](https://img.shields.io/badge/Infrastructure-AWS_CDK-232F3E)](https://aws.amazon.com/cdk/)
 
-For cloud engineers, platform teams, and developers learning to connect agents to AWS operations. The badges identify technology and licensing, not certification or a passing test suite.
+For cloud engineers, platform teams, and developers learning to connect an agent to AWS operations. The badges identify technology and licensing, not certification or a passing test suite.
 
 > **Educational reference implementation—not production-ready infrastructure or an AWS Support service.** Review permissions, costs, data handling, and [limitations](#security--limitations) before deploying.
 
@@ -47,7 +47,7 @@ flowchart TB
     Gateway -.-> Traces
 ```
 
-The agent uses Gateway for tool discovery and invocation; **Cedar policy**, not the prompt, determines which categories the caller may invoke. The five MCP runtimes use their own AWS execution roles. **AgentCore Memory** maintains agent context; the separate **DynamoDB conversation API** restores the browser's conversation list and messages.
+This is **one CloudOps agent with five MCP tool servers**, not a multi-agent system. The agent uses Gateway for tool discovery and invocation; **Cedar policy**, not the prompt, determines which categories the caller may invoke. The five MCP runtimes use their own AWS execution roles. **AgentCore Memory** maintains agent context; the separate **DynamoDB conversation API** restores the browser's conversation list and messages.
 
 CDK/CodeBuild/ECR build and provision the backend; they are not on the chat request path. Amplify hosting is a separate manual deployment. A daily EventBridge-triggered scraper refreshes the EOL lookup table.
 
