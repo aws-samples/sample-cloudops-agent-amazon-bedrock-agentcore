@@ -13,6 +13,7 @@ interface ChatContextValue {
   isLoading: boolean;
   progressMessage: string | null;
   error: { message: string; originalPrompt: string } | null;
+  saveError: string | null;
   sessionId: string;
   sendMessage: (content: string, credentials: AgentCredentials) => void;
   retryMessage: (credentials: AgentCredentials) => void;
@@ -20,6 +21,7 @@ interface ChatContextValue {
   cancelRequest: () => void;
   setMessages: (messages: Message[]) => void;
   setSessionId: (id: string) => void;
+  dismissSaveError: () => void;
 }
 
 const ChatContext = createContext<ChatContextValue | undefined>(undefined);
@@ -115,7 +117,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       const token = await getAuthToken();
       if (token && targetConversationId) {
         appendMessages(token, targetConversationId, [userMessage]).catch(() => {
-          // Non-critical
+          // Persisting to conversation history failed. Surface it as a
+          // non-blocking notice (issue #19) rather than swallowing it, so the
+          // user is not misled into thinking the exchange was saved.
+          dispatch({
+            type: 'SET_SAVE_ERROR',
+            payload:
+              'Your message was sent, but saving it to conversation history failed. It may not appear after reloading.',
+          });
         });
       }
 
@@ -156,7 +165,17 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         const saveToken = await getAuthToken();
         if (saveToken && targetConversationId) {
           appendMessages(saveToken, targetConversationId, [agentMessage]).catch(() => {
-            // Non-critical
+            // Only surface the save failure if the user is still viewing this
+            // conversation; otherwise it would be misattributed to whatever
+            // conversation they switched to. The failure is still real, but the
+            // notice is only meaningful in-context (issue #19).
+            if (sessionIdRef.current === targetConversationId) {
+              dispatch({
+                type: 'SET_SAVE_ERROR',
+                payload:
+                  'The response was received, but saving it to conversation history failed. It may not appear after reloading.',
+              });
+            }
           });
         }
       } catch (error: unknown) {
@@ -207,11 +226,16 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     sessionIdRef.current = id;
   }, []);
 
+  const dismissSaveError = useCallback(() => {
+    dispatch({ type: 'SET_SAVE_ERROR', payload: null });
+  }, []);
+
   const value: ChatContextValue = {
     messages: state.messages,
     isLoading: state.isLoading,
     progressMessage: state.progressMessage,
     error: state.error,
+    saveError: state.saveError,
     sessionId: sessionIdRef.current,
     sendMessage,
     retryMessage,
@@ -219,6 +243,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     cancelRequest,
     setMessages,
     setSessionId,
+    dismissSaveError,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

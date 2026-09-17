@@ -88,7 +88,7 @@ export interface ConversationContextValue {
   createConversation: () => Promise<string>;
   switchConversation: (id: string) => Promise<Message[]>;
   renameConversation: (id: string, name: string) => Promise<void>;
-  deleteConversation: (id: string) => Promise<void>;
+  deleteConversation: (id: string) => Promise<string | null>;
   saveMessages: (messages: Message[]) => Promise<void>;
 }
 
@@ -163,7 +163,7 @@ export function ConversationProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  const deleteConversationFn = useCallback(async (id: string): Promise<void> => {
+  const deleteConversationFn = useCallback(async (id: string): Promise<string | null> => {
     try {
       const token = await getAuthToken();
       await apiDeleteConversation(token, id);
@@ -181,7 +181,14 @@ export function ConversationProvider({ children }: { children: React.ReactNode }
         };
         dispatch({ type: 'ADD_CONVERSATION', payload: metadata });
         dispatch({ type: 'SET_ACTIVE', payload: created.conversationId });
+        // Return the replacement id so the caller can resync the chat view
+        // (clear stale messages + retarget the chat session). Without this the
+        // UI keeps showing the deleted conversation's messages and the next
+        // send targets a stale id (same desync class as issue #19).
+        return created.conversationId;
       }
+      // A non-active conversation was deleted; the current view is unaffected.
+      return null;
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to delete conversation';
       dispatch({ type: 'SET_CONVERSATION_ERROR', payload: message });

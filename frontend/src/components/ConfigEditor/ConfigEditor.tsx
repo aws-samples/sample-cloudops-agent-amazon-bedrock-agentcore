@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { AppConfig } from '@/types';
+import { isValidHttpUrl } from '@/services/config';
 import styles from './ConfigEditor.module.css';
 
 // Default region for the config form. Read from the build-time env var
@@ -43,6 +44,19 @@ export function ConfigEditor({ onClose }: { onClose?: () => void }) {
       return;
     }
 
+    // The chat UI always enables conversation history, so the endpoint is
+    // required — an empty or malformed value previously saved successfully and
+    // then broke the sidebar with "Conversation API endpoint not configured"
+    // (issue #20). Validate it up front and make the dependency explicit.
+    if (!conversationApiEndpoint.trim()) {
+      setError('Conversation History API endpoint is required — conversation history is always enabled.');
+      return;
+    }
+    if (!isValidHttpUrl(conversationApiEndpoint)) {
+      setError('Conversation History API endpoint must be a valid http(s) URL (e.g. https://xxxx.execute-api.us-east-1.amazonaws.com/prod).');
+      return;
+    }
+
     const config: AppConfig = {
       cognito: {
         userPoolId: userPoolId.trim(),
@@ -56,13 +70,10 @@ export function ConfigEditor({ onClose }: { onClose?: () => void }) {
         agentArn: acAgentArn.trim(),
         agentName: acAgentName.trim() || undefined,
       },
-    };
-
-    if (conversationApiEndpoint.trim()) {
-      config.conversationApi = {
+      conversationApi: {
         endpoint: conversationApiEndpoint.trim(),
-      };
-    }
+      },
+    };
 
     localStorage.setItem('appConfig', JSON.stringify(config));
     window.location.reload();
@@ -178,7 +189,7 @@ export function ConfigEditor({ onClose }: { onClose?: () => void }) {
           <h2 className={styles.sectionTitle}>Conversation History API</h2>
           <div className={styles.fieldGroup}>
             <label className={styles.label}>
-              API Endpoint URL
+              API Endpoint URL *
               <input
                 className={styles.input}
                 type="text"
@@ -187,6 +198,11 @@ export function ConfigEditor({ onClose }: { onClose?: () => void }) {
                 onChange={(e) => setConversationApiEndpoint(e.target.value)}
               />
             </label>
+            <p className={styles.hint}>
+              Required — conversation history is always enabled. Use the{' '}
+              <code>ConversationApiUrl</code> output of{' '}
+              <code>CloudOpsConversationHistoryStack</code>.
+            </p>
           </div>
         </div>
 

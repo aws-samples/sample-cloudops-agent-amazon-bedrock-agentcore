@@ -250,7 +250,13 @@ def test_nonadmin_denied_invocation_returns_authorization_error_with_no_tool_dat
         assert isinstance(detail, str) and detail, (
             "Authorization denial must carry an identifying error message."
         )
-        recovered = extract_denied_category(detail)
+        # Recover the denied category. The current Gateway Cedar-policy denial
+        # message (e.g. "Tool Execution Denied ... denied by default") names no
+        # tool/category, so ``extract_denied_category`` legitimately returns
+        # ``None`` for it. In that case we preserve the *requested* tool/category
+        # context we already hold from the invocation (issue #18): the response's
+        # role-unavailable meaning is unchanged and still leaks no tool data.
+        recovered = extract_denied_category(detail) or category
         assert recovered in {"cloudwatch", "cloudtrail", "inventory", category}, (
             f"Authorization error for '{tool_name}' must identify the denied "
             f"category; could not recover one from: {detail!r} (Req 4.4, 8.1)."

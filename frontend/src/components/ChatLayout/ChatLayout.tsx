@@ -12,6 +12,8 @@ interface ChatLayoutProps {
   isLoading: boolean;
   progressMessage: string | null;
   error: { message: string; originalPrompt: string } | null;
+  saveError?: string | null;
+  onDismissSaveError?: () => void;
   agentName: string;
   userName: string;
   onSendMessage: (text: string) => void;
@@ -37,6 +39,8 @@ export function ChatLayout({
   isLoading,
   progressMessage,
   error,
+  saveError,
+  onDismissSaveError,
   agentName,
   userName,
   onSendMessage,
@@ -106,6 +110,21 @@ export function ChatLayout({
             onRetry={onRetry}
             onCancel={handleCancelError}
           />
+        )}
+        {saveError && (
+          <div className={styles.saveNotice} role="status">
+            <span className={styles.saveNoticeText}>{saveError}</span>
+            {onDismissSaveError && (
+              <button
+                type="button"
+                className={styles.saveNoticeDismiss}
+                onClick={onDismissSaveError}
+                aria-label="Dismiss save notice"
+              >
+                ✕
+              </button>
+            )}
+          </div>
         )}
         <MessageInput onSend={onSendMessage} disabled={isLoading} onCancel={onCancelRequest} />
       </main>
