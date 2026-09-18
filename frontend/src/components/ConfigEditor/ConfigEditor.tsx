@@ -134,7 +134,7 @@ export function ConfigEditor({ onClose }: { onClose?: () => void }) {
                 />
               </label>
               <label className={styles.label}>
-                Region *
+                Cognito Region *
                 <input
                   className={styles.input}
                   type="text"
@@ -171,7 +171,7 @@ export function ConfigEditor({ onClose }: { onClose?: () => void }) {
                 />
               </label>
               <label className={styles.label}>
-                Region
+                AgentCore Region
                 <input
                   className={styles.input}
                   type="text"
