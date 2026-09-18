@@ -7,16 +7,19 @@ cat <<'EOF'
 CloudOps Agent on Amazon Bedrock AgentCore — provisioning workflow
 
 Complete the manual prerequisites in the README first (Node 22 + npm, AWS CLI v2,
-uv, Docker running, zip, an authorized AWS profile, Bedrock model access, and
-CloudWatch Transaction Search enabled once per account/Region). Then select your
-environment and run the targets in order:
+uv, zip, an authorized AWS profile, Bedrock model access, and CloudWatch
+Transaction Search enabled once per account/Region). A container runtime
+(Docker/Colima, or Finch via CDK_DOCKER=finch) is OPTIONAL — the EOL scraper
+Lambda bundles locally via python3/pip. Then select your environment and run the
+targets in order:
 
   export AWS_PROFILE="<your-profile>"
   export AWS_REGION="<your-region>"
   export COGNITO_ADMIN_EMAIL="<your-email>"
 
-  make check       Verify tools, Docker, AWS auth/identity, Region, and the
-                   Transaction Search prerequisite. Changes nothing.
+  make check       Verify tools, AWS auth/identity, Region, the Transaction
+                   Search prerequisite, and (optionally) a container runtime.
+                   Changes nothing.
   make plan        npm ci + build + synth once, then a template-only CDK diff
                    against the target account/Region. Makes NO AWS changes.
   make deploy      Bootstrap (if needed) + staged backend deploy that waits for
