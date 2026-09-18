@@ -130,14 +130,26 @@ and the dataset references; prior scores do not enter judge inputs.
 
 ## Verification evidence
 
-The [baseline artifact](evidence/baseline-2026-09-18.json) was captured from clean
-commit `8f75744` and re-scored from clean commit `6ef575c` on 2026-09-18 in
-`us-east-1`. Both invocations used a maintainer account; no second-account live run
-was performed. A fresh clone successfully ran locked dependency installation,
-offline checks, full capture, 39-call scoring, a second 39-call replay without agent
-invocation, and report regeneration. All 12 cases and the separate sanity case
-completed each metric with no missing results. The shared prompt was compared
-byte-for-byte with the pre-change prompt at the same clock value.
+The [baseline artifact](evidence/baseline-2026-09-18.json) was captured and scored
+from clean commit `bae50fe` on 2026-09-18 in `us-east-1`, using the owner's
+`aiops_demo` profile. STS identity was checked against the intended demo account
+before invocation. Account IDs and credentials are omitted from public evidence.
+All 39 judge calls completed: 12 baseline cases plus one separate sanity case across
+three metrics, with no execution failures or skipped results.
+The earlier baseline incorrectly used the maintainer's `prod` profile; this full
+demo-account run replaces it rather than relabeling its results.
+
+Earlier clean-clone verification covered locked installation, offline checks,
+capture, scoring, replay without agent invocation, and report regeneration in a
+different account. The shared prompt was compared byte-for-byte with the pre-change
+prompt at the same clock value. These two-account checks do not establish support
+for every account policy or Region.
+
+The demo run uses direct on-demand `Evaluate`, not a console batch job or online
+evaluation configuration. Its session/trace IDs had no matches in a completed
+CloudWatch Logs Insights query across 28 runtime/shared log groups in the demo
+account; no evaluation log group was present. These results remain in the local
+artifact, not the console's Batch evaluation list or AgentCore Observability.
 
 Local checks: evaluation suite 8 passed and mypy clean; agent suite 107 passed,
 7 live-config skips and 14 live tests deselected; CDK 15 passed and TypeScript build
@@ -169,10 +181,10 @@ Results retain judge `tokenUsage`; traces record agent usage without double-coun
 child spans. The sanity trace reuses agent tokens and must not be charged twice in
 your own summaries.
 
-The published re-score used **40,616 input + 8,953 output judge tokens** (49,569
-total), approximately **$0.205** at those rates, plus the original agent inference
-of **70,568 input + 4,029 output tokens**. These are token-based estimates, not a
-billing statement; development/smoke runs and the first scoring are additional.
+The published demo-account run used **40,809 input + 9,098 output judge tokens**
+(49,907 total), approximately **$0.207** at those rates, plus agent inference of
+**70,582 input + 4,047 output tokens**. These are token-based estimates, not a
+billing statement; earlier runs in the wrong account incurred additional charges.
 
 The standalone runner never imports the production runtime, obtains a JWT, reads
 customer resources or enables raw HTTP logging. Only Strands span/event allowlists

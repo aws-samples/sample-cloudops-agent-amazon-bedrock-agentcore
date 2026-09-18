@@ -215,16 +215,16 @@ then calls the real AgentCore Evaluations service. Fixed tool fixtures make the
 reference answers independent of each user's AWS account. Supply your own profile,
 supported Region and model; production telemetry remains metadata-only.
 
-Measured on **2026-09-18**, `us-east-1`, using
+Measured on **2026-09-18** in the owner's `aiops_demo` account, `us-east-1`, using
 `us.anthropic.claude-sonnet-4-5-20250929-v1:0`, temperature 0, Strands 1.20.0,
-dataset 1.0.0. Capture ran from clean commit `8f75744`; saved traces were re-scored
-from `6ef575c`. [Sanitized evidence](evaluations/evidence/baseline-2026-09-18.json)
+dataset 1.0.0. Capture and scoring ran from clean commit `bae50fe` after verifying
+the profile's account identity. [Sanitized evidence](evaluations/evidence/baseline-2026-09-18.json)
 contains hashes, configuration, evaluator metadata, session/trace mappings, agent
 responses, tool content, token usage and actual Evaluate result bodies.
 
 | Metric | Returned scale | Evaluated / expected | Mean | Label distribution |
 | --- | --- | --- | --- | --- |
-| Helpfulness | 0–1 | 12 / 12 | 0.9442 | Above And Beyond: 9; Very Helpful: 2; Somewhat Helpful: 1 |
+| Helpfulness | 0–1 | 12 / 12 | 0.9292 | Above And Beyond: 7; Very Helpful: 5 |
 | Faithfulness | 0–1 | 12 / 12 | 0.9583 | Completely Yes: 10; Generally Yes: 2 |
 | Correctness with ground truth | 0–1 | 12 / 12 | 0.9167 | Correct: 11; Incorrect: 1 |
 
@@ -238,11 +238,13 @@ sanity case scored **0 on all three metrics** and is excluded above.
 Representative failures: missing cost data prompted speculative explanations;
 an empty ALARM query led to unsupported claims about other alarm states (both
 Faithfulness 0.75). The empty inventory answer omitted the all-account/Region scope
-caveat (Correctness 0). The denied-data case was only somewhat helpful. These scores
+caveat (Correctness 0). These scores
 do not prove deployed Gateway/IAM enforcement or live AWS factual accuracy. The
-benchmark uses simplified fixture tools, and live verification covered one account
-and Region—not all account policies, models or Regions. Built-in judges can vary:
-the first scoring of the same traces gave Helpfulness 0.9158 versus 0.9442 on re-score.
+benchmark uses simplified fixture tools, and live verification covered two accounts
+in one Region—not all account policies, models or Regions. This demo-account baseline
+replaces an earlier run that incorrectly used the maintainer's `prod` profile.
+Built-in judges can vary. Direct on-demand calls do not create console batch jobs;
+these locally captured sessions are not published to AgentCore Observability.
 
 See the [runbook](evaluations/README.md) for pinned `uv` installation, invocation,
 local telemetry flush, scoring, replay, IAM/model prerequisites, cost and retention.
