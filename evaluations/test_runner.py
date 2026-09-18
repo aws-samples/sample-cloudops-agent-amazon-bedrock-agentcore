@@ -108,3 +108,32 @@ def test_token_aggregation_does_not_double_count_cumulative_multi_turn_usage():
     spans = [{"attributes": {"gen_ai.operation.name": operation, "gen_ai.usage.input_tokens": count}}
              for operation, count in [("chat", 10), ("invoke_agent", 10), ("chat", 5), ("invoke_agent", 15)]]
     assert agent_token_usage(spans) == {"input": 15, "output": 0, "total": 0}
+
+
+def test_batch_maps_final_prompt_to_reference_and_excludes_sanity():
+    import json
+    from pathlib import Path
+    from batch import batch_request
+    from runner import load_dataset
+    run = json.loads(Path("evidence/baseline-2026-09-18.json").read_text())
+    request = batch_request(load_dataset(), run, "demo_batch", "/cloudops/evals/demo", False)
+    source = request["dataSourceConfig"]["cloudWatchLogs"]
+    assert len(source["filterConfig"]["sessionTraceIds"]) == 12
+    references = request["evaluationMetadata"]["sessionMetadata"]
+    followup = next(x for x in references if x["testScenarioId"] == "alarms-followup")
+    assert followup["groundTruth"]["inline"]["turns"] == [{
+        "input": {"prompt": "Which one has been alarming longer, and by how many minutes?"},
+        "expectedResponse": {"text": "demo-cpu has been alarming longer: 30 minutes versus 10 minutes for demo-latency, a difference of 20 minutes at the snapshot time."},
+    }]
+    assert all(x["testScenarioId"] != "sanity-wrong-cost" for x in references)
+
+
+def test_completed_batch_with_missing_results_is_not_success():
+    from batch import check_batch
+    job = {"status": "COMPLETED", "evaluationResults": {
+        "numberOfSessionsCompleted": 11, "numberOfSessionsFailed": 0,
+        "numberOfSessionsIgnored": 0, "totalNumberOfSessions": 11,
+        "evaluatorSummaries": [],
+    }}
+    with pytest.raises(ValueError, match="incomplete"):
+        check_batch(job, 12)

@@ -244,7 +244,21 @@ benchmark uses simplified fixture tools, and live verification covered two accou
 in one Region—not all account policies, models or Regions. This demo-account baseline
 replaces an earlier run that incorrectly used the maintainer's `prod` profile.
 Built-in judges can vary. Direct on-demand calls do not create console batch jobs;
-these locally captured sessions are not published to AgentCore Observability.
+use the new [batch workflow](evaluations/README.md#console-visible-batch-evaluations)
+to publish only approved synthetic spans and create console-visible jobs.
+
+**Console verification:** `cloudops_baseline_20260918_verified` and
+`cloudops_sanity_20260918_verified` both show **Success** in the demo account's
+`us-east-1` Batch evaluation tab. The batch baseline completed 12/12 sessions,
+with service-reported means of Helpfulness **0.96**, Faithfulness **0.96**, and
+Correctness **0.92** (rounded by the batch API). Sanity completed 1/1 with all
+scores zero. These are separate judge calls from the on-demand table above.
+[Batch evidence](evaluations/evidence/console-batch-2026-09-18.json) includes all
+36 baseline and three sanity result events. Four earlier failed jobs remain
+visible: they started before Logs Insights could see the input spans. The runner
+now polls Logs Insights, not merely log ingestion, before starting jobs.
+
+![Completed baseline and sanity batch jobs; account header cropped](evaluations/evidence/console-batch-completed.png)
 
 See the [runbook](evaluations/README.md) for pinned `uv` installation, invocation,
 local telemetry flush, scoring, replay, IAM/model prerequisites, cost and retention.

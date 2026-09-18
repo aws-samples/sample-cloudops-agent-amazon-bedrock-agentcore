@@ -117,6 +117,51 @@ tables. Compare native scores, evaluator metadata, model, prompt hash, dataset h
 lock hash and run date; AWS manages built-in judge prompts/models, so source pinning
 does not pin their behavior. A service score is evidence, not a deterministic test.
 
+## Console-visible batch evaluations
+
+`runner.py score` is a synchronous API workflow and does not create console jobs.
+To see results under **AgentCore → Evaluations → Batch evaluation**, publish the
+approved synthetic capture and run the batch service instead:
+
+```bash
+uv run --directory evaluations --locked batch.py \
+  --profile "$EVAL_PROFILE" --region "$EVAL_REGION" --allow-paid \
+  --input evidence/baseline-2026-09-18.json --output runs/batch.json
+```
+
+Use `runs/traces.json` instead to evaluate your own newly captured fixture run.
+No additional agent inference is needed to batch-score saved traces. The command
+creates a uniquely named `/cloudops/evaluations/fixtures/<timestamp>` log group
+with seven-day retention, uploads only validated synthetic Strands spans, waits
+until **Logs Insights** can query all spans, then starts two named jobs: `cloudops_baseline_*`
+(12 cases) and `cloudops_sanity_*` (one deliberately wrong answer). It supplies the
+final prompt's expected response as batch ground truth and targets only the final
+trace for each case; the sanity scores never enter the baseline job.
+
+Batch runs use the caller's identity, not a separate execution role. In addition
+to the on-demand permissions, grant `bedrock-agentcore:StartBatchEvaluation`,
+`GetBatchEvaluation`, `ListBatchEvaluations`, `StopBatchEvaluation`, and
+`DeleteBatchEvaluation`, plus CloudWatch `CreateLogGroup`, `PutRetentionPolicy`,
+`CreateLogStream`, `PutLogEvents`, `StartQuery`, `GetQueryResults`, `GetLogEvents`
+and `FilterLogEvents` on the fixture group and service-managed result destination.
+Scope policies to your account/Region. No production trace settings or IAM policies
+are modified. Batch scoring and CloudWatch ingestion/query/storage incur charges.
+
+Refresh the console in the **same account and Region** printed by the command.
+The local `runs/batch.json` records job IDs, status, counts, summaries and the
+CloudWatch output location. Treat it as private: unlike the sanitized benchmark,
+job ARNs contain your account ID. A timeout does not cancel a job; use its saved
+ID with `aws bedrock-agentcore get-batch-evaluation --batch-evaluation-id <id>`.
+The command fails on partial/missing session or metric counts, not only job status.
+
+Results go to the service-managed batch log group and evaluation metrics namespace.
+This creates console **batch jobs**, not an online evaluation configuration or a
+new production Runtime. Historical failed jobs remain visible for diagnosis.
+To clean up, inspect the saved exact IDs/group first, stop any running job, then
+delete those batch records and that fixture log group. Do not delete the shared
+service-managed results group: it can contain other users' jobs. Its retention is
+account-managed; the seven-day policy applies only to the new fixture input group.
+
 To regenerate the committed baseline table without AWS access:
 
 ```bash
@@ -145,13 +190,24 @@ different account. The shared prompt was compared byte-for-byte with the pre-cha
 prompt at the same clock value. These two-account checks do not establish support
 for every account policy or Region.
 
-The demo run uses direct on-demand `Evaluate`, not a console batch job or online
+The original demo run used direct on-demand `Evaluate`, not a console batch job or online
 evaluation configuration. Its session/trace IDs had no matches in a completed
 CloudWatch Logs Insights query across 28 runtime/shared log groups in the demo
-account; no evaluation log group was present. These results remain in the local
-artifact, not the console's Batch evaluation list or AgentCore Observability.
+account; no evaluation log group was present at that time. The later batch workflow
+now publishes the approved spans to an isolated input group and stores actual
+evaluation results in CloudWatch. See the [console screenshot](evidence/console-batch-completed.png)
+and [batch result events](evidence/console-batch-2026-09-18.json). The two jobs named
+`cloudops_baseline_20260918_verified` and `cloudops_sanity_20260918_verified` completed
+12/12 and 1/1 sessions respectively. Four initial jobs failed on telemetry visibility;
+they remain visible for diagnosis. Batch discovery requires Logs Insights visibility,
+which can lag behind `GetLogEvents`; the runner now waits on the correct boundary.
 
-Local checks: evaluation suite 8 passed and mypy clean; agent suite 107 passed,
+The full `batch.py` command was also rerun successfully after the readiness fix:
+`cloudops_baseline_20260918_063523` and `cloudops_sanity_20260918_063523` completed
+12/12 and 1/1 sessions, and downloaded all 39 matched result events. No manual
+intervention or new agent invocation was required for that verification.
+
+Local checks: evaluation suite 10 passed and mypy clean; agent suite 107 passed,
 7 live-config skips and 14 live tests deselected; CDK 15 passed and TypeScript build
 clean; frontend 41 passed and production build clean (existing bundle-size warning);
 Lambda suites 20 passed; deployed-source inventory suite 6 passed; standalone inventory
@@ -199,8 +255,8 @@ Reference answers go only to judges, never into agent prompts/tool results.
 judge explanations and all IDs. Published correlation IDs here belong only to local
 synthetic traces, not production sessions. Preserve full actual Evaluate result bodies
 (minus HTTP response metadata) for audit. If content is unsafe, do not publish it.
-There is no evaluation service, online config, runtime, log group or other cloud
-resource created by this workflow to destroy. Delete your exact local run directory
+The on-demand workflow creates no cloud resources; the optional batch workflow
+creates jobs and log groups with the cleanup requirements above. Delete your exact local run directory
 when no longer needed; retain published baseline evidence with the source revision.
 AWS service-side processing/retention is governed by AWS, not local file deletion.
 
