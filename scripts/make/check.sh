@@ -19,7 +19,7 @@ fail=0
 
 # --- Required command-line tools ---
 echo "Tools:"
-for tool in node npm aws uv docker zip git python3; do
+for tool in node npm aws uv zip git python3; do
   if have "$tool"; then
     note "OK    $tool ($($tool --version 2>&1 | head -1))"
   else
@@ -39,13 +39,31 @@ if have node; then
   fi
 fi
 
-# Docker must be running (Lambda asset bundling needs the daemon).
-if have docker; then
-  if docker info >/dev/null 2>&1; then
-    note "OK    docker daemon is running"
+# Container runtime for CDK asset bundling — OPTIONAL for this sample.
+# The only Docker-bundled asset (the EOL scraper Lambda) has a local bundling
+# fallback that installs its pure-Python deps with python3/pip, so CDK only
+# falls back to a container when local bundling is unavailable. The four MCP
+# images build in CodeBuild, not locally. So a running container runtime is
+# nice-to-have, not required — this is reported as a warning, never a failure.
+echo ""
+echo "Container runtime (optional — EOL scraper bundles locally via python3/pip):"
+if [ -n "${CDK_DOCKER:-}" ]; then
+  note "INFO  CDK_DOCKER=${CDK_DOCKER} (CDK will use this runtime for any container bundling)"
+  if [ "${CDK_DOCKER}" = "finch" ]; then
+    if have finch && finch vm status 2>/dev/null | grep -qi 'running'; then
+      note "OK    finch VM is running"
+    else
+      warn "CDK_DOCKER=finch but the Finch VM is not running. Run 'finch vm init' (first time) or 'finch vm start'. Not required unless local Python bundling is unavailable."
+    fi
+  fi
+elif have docker && docker info >/dev/null 2>&1; then
+  note "OK    docker daemon is running"
+else
+  # python3 + pip make local bundling work without any container runtime.
+  if have python3 && python3 -m pip --version >/dev/null 2>&1; then
+    note "OK    no running container runtime, but python3 + pip are available for local bundling"
   else
-    note "MISS  docker is installed but the daemon is not running — start Docker Desktop/engine."
-    fail=1
+    warn "No running container runtime AND python3/pip is unavailable. Install pip (python3 -m ensurepip), start Docker/Colima, or set CDK_DOCKER=finch — otherwise EOL scraper bundling has no path."
   fi
 fi
 

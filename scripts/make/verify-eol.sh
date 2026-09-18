@@ -22,7 +22,11 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
 echo "Invoking the scraper once to populate the table..."
-aws lambda invoke --function-name "$FN" --region "$REGION" "$TMP/result.json" > "$TMP/invoke.json"
+# Force --output json so the invoke *metadata* is JSON regardless of the caller's
+# configured default output format. With a `text` default the CLI prints the
+# metadata as "$LATEST<TAB>200", which is not JSON and previously broke the
+# verification below.
+aws lambda invoke --function-name "$FN" --region "$REGION" --output json "$TMP/result.json" > "$TMP/invoke.json"
 
 echo "Verifying the function result (not just HTTP 200)..."
 python3 - "$TMP" <<'PY'
