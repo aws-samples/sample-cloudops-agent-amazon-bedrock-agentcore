@@ -6,6 +6,7 @@ export const initialChatState: ChatState = {
   isLoading: false,
   progressMessage: null,
   error: null,
+  saveError: null,
 };
 
 export function chatReducer(state: ChatState, action: ChatAction): ChatState {
@@ -24,6 +25,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         isLoading: true,
         progressMessage: null,
         error: null,
+        saveError: null,
       };
     }
 
@@ -64,6 +66,12 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         error: action.payload,
       };
 
+    case 'SET_SAVE_ERROR':
+      return {
+        ...state,
+        saveError: action.payload,
+      };
+
     case 'CLEAR_MESSAGES':
       return {
         ...initialChatState,
@@ -83,6 +91,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         isLoading: true,
         progressMessage: null,
         error: null,
+        saveError: null,
       };
     }
 
@@ -93,6 +102,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         isLoading: false,
         progressMessage: null,
         error: null,
+        saveError: null,
       };
 
     default:

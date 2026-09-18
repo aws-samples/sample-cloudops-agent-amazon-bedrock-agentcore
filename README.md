@@ -63,7 +63,8 @@ Install:
 
 - **Node.js 22 LTS** and npm; documentation/build checks use Node **22.18.0**. See [CDK-supported Node versions](https://docs.aws.amazon.com/cdk/v2/guide/node-versions.html).
 - Git, [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html), and [uv](https://docs.astral.sh/uv/getting-started/installation/). Python test environments are managed with uv; the deployed main image uses Python 3.14.
-- Docker running for Lambda asset bundling and the optional MCP patch check; `zip` for the frontend upload archive. Commands below use a Bash-compatible shell. CDK is installed by `npm ci`; no global CDK install is required.
+- A container runtime is **optional**: the only Docker-bundled asset (the EOL scraper Lambda) has a local fallback that installs its pure-Python dependencies with `python3`/`pip`, and the four MCP images build in CodeBuild — so a local build needs no daemon. Provide one only if local Python bundling is unavailable or you run the optional MCP patch check: Docker, [Colima](https://github.com/abiosoft/colima), or [Finch](https://github.com/runfinch/finch) (`export CDK_DOCKER=finch`). `zip` is used for the frontend upload archive. Commands below use a Bash-compatible shell. CDK is installed by `npm ci`; no global CDK install is required.
+- **GNU Make** (preinstalled on macOS and most Linux distributions) to run the `make` targets below. The targets are thin wrappers over the project's `npx cdk`/`npm` commands in [`scripts/make/`](scripts/make/); you can run those directly instead if you prefer.
 - An AWS profile authorized to bootstrap CDK and provision this sample: CloudFormation, IAM roles/policies and `iam:PassRole`, S3/ECR/CodeBuild, Cognito, Lambda, DynamoDB, API Gateway, EventBridge, AgentCore and CloudWatch delivery resources. Organization SCPs, permission boundaries and service quotas also apply. Have your account administrator review the [CDK bootstrap permissions](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping-env.html); runtime read permissions are not deployment permissions.
 - Account access to the chosen Bedrock model, including any provider/Marketplace prerequisites and cross-Region inference permissions. See [model access](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access.html).
 - **CloudWatch Transaction Search enabled once per account/Region**, with its X-Ray log resource policy. Follow [AWS's setup procedure](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-configure.html). This sample configures resource trace deliveries, not account-wide enablement.
@@ -91,108 +92,57 @@ The default model is `us.anthropic.claude-sonnet-4-5-20250929-v1:0`. If that pro
 
 The sample uses fixed names for several resources. Do not deploy a second copy into the same account/Region without addressing name collisions. If reusing an EOL table, set `EOL_TABLE_NAME` to that table's name before synthesis; the scraper will write to it.
 
-### 3. Bootstrap, build, and deploy the backend
+### 3. Deploy the backend with `make`
+
+From the repository root, after the prerequisites and the environment selection above, run three targets. Each is a thin wrapper over the project's own `npx cdk`/`npm` commands (see [`scripts/make/`](scripts/make/)); there is no new deployment framework and no global install.
 
 ```bash
-cd cdk
-npm ci
-npm run build
-ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-npx cdk bootstrap "aws://$ACCOUNT_ID/$AWS_REGION"
-npx cdk synth --quiet
-
-# Keep this synthesized assembly for both deployment stages.
-npx cdk deploy --app cdk.out CloudOpsImageStack CloudOpsAuthStack --exclusively
+make check      # Verify tools, Docker, AWS auth/identity, Region, and Transaction Search. Changes nothing.
+make plan       # npm ci + build + synth once, then a template-only CDK diff. Makes NO AWS changes — review it.
+make deploy     # Bootstrap (if needed) + staged backend deploy + EOL population/verification.
 ```
 
-Review CDK's security-change prompts before approving. **Do not proceed until the main image build has succeeded.** ImageStack waits for the MCP builds but only triggers the main-agent build; stack completion alone does not prove that its new image is available. In CodeBuild, inspect `cloudops-mainruntime-build`, or run:
+`make plan` is a CDK **preview** (a template diff via `cdk diff --no-changeset`) — not a Terraform-style saved plan or a guarantee of exact replacement behavior. Review the additions, modifications, deletions, and any potential replacements before deploying. `make deploy` reuses the exact assembly `make plan` synthesized (so build-trigger timestamps are not regenerated between stages) and refuses to run if the plan is missing, is for a different account/Region, or the sources/config changed since.
+
+`make deploy` **preserves CDK's security-change prompts** (no `--require-approval never`) — review and approve them. It provisions in stages and **waits for the main agent image build to succeed** before the runtime stacks: ImageStack triggers `cloudops-mainruntime-build` but does not wait for it, and stack completion alone does not prove the new image is available. The backend comprises the [six stacks](ARCHITECTURE.md#deployment-topology); CDK does **not** deploy the React frontend.
+
+Finally, `make deploy` populates and verifies the EOL lookup table (the daily refresh has not necessarily run on a new deployment). Verification checks the scraper's actual result — no `FunctionError`, a nonzero `unique_records` count, per-service coverage across `eks`/`rds`/`elasticache`/`opensearch`/`msk`, and a nonzero DynamoDB row count — because a Lambda `StatusCode: 200` alone does not prove data was populated. Dates can still be `Unknown`; scraping and date checks do not prove source correctness. Check CloudFormation completion and AgentCore runtime/Gateway readiness before first use; a healthy stack is configuration evidence, not a substitute for the smoke checks below.
+
+> Prefer to run each step by hand (bootstrap, staged `cdk deploy`, build polling, EOL checks)? Read the helper scripts in [`scripts/make/`](scripts/make/) — they are the canonical commands the targets run.
+
+### 4. Publish the frontend and configure it
 
 ```bash
-MAIN_BUILD_ID=$(aws codebuild list-builds-for-project \
-  --project-name cloudops-mainruntime-build --sort-order DESCENDING \
-  --query 'ids[0]' --output text)
-aws codebuild batch-get-builds --ids "$MAIN_BUILD_ID" \
-  --query 'builds[0].{Status:buildStatus,Started:startTime,Logs:logs.deepLink}'
-# If IN_PROGRESS, wait and repeat batch-get-builds for this same ID.
-# Continue only on SUCCEEDED; investigate FAILED/FAULT/STOPPED/TIMED_OUT.
-
-npx cdk deploy --app cdk.out --all
-cd ..
-```
-
-Using the same assembly avoids regenerating build-trigger timestamps between stages. The backend comprises the [six stacks](ARCHITECTURE.md#deployment-topology); CDK does **not** deploy the React frontend. Check CloudFormation completion and AgentCore runtime/Gateway readiness before first use. A healthy stack is configuration evidence, not a substitute for the smoke checks below.
-
-### 4. Populate and check the EOL data
-
-The daily refresh has not necessarily run on a new deployment. Retrieve its function name from the stack output and invoke it once:
-
-```bash
-EOL_FUNCTION=$(aws cloudformation describe-stacks \
-  --stack-name CloudOpsMCPRuntimeStack \
-  --query "Stacks[0].Outputs[?OutputKey=='EolScraperFunctionName'].OutputValue | [0]" \
-  --output text)
-VERIFY_DIR=$(mktemp -d)
-aws lambda invoke --function-name "$EOL_FUNCTION" \
-  "$VERIFY_DIR/eol-result.json" > "$VERIFY_DIR/eol-invoke.json"
-
-uv run python - "$VERIFY_DIR" <<'PY'
-import json, sys
-from pathlib import Path
-root = Path(sys.argv[1])
-meta = json.loads((root / 'eol-invoke.json').read_text())
-result = json.loads((root / 'eol-result.json').read_text())
-assert 'FunctionError' not in meta, meta
-assert result.get('unique_records', 0) > 0, result
-assert all(result.get('by_service', {}).get(s, 0) > 0
-           for s in ('eks', 'rds', 'elasticache', 'opensearch', 'msk')), result
-print(json.dumps(result, indent=2))
-PY
-
-EOL_TABLE=$(aws lambda get-function-configuration --function-name "$EOL_FUNCTION" \
-  --query 'Environment.Variables.EOL_TABLE_NAME' --output text)
-aws dynamodb scan --table-name "$EOL_TABLE" --select COUNT \
-  --query '{Count:Count,ScannedCount:ScannedCount}'
-```
-
-Require a nonzero table count as well as the function's per-service results. `StatusCode: 200` alone only means Lambda accepted/completed the invocation protocol; check `FunctionError`, the response body, data and logs. Zero coverage for a service needs investigation. Dates can still be `Unknown`; scraping and date checks do not prove source correctness.
-
-### 5. Publish the frontend and configure it
-
-```bash
-cd frontend
-npm ci
-npm run zip  # Builds and creates cloudops-frontend.zip.
-cd ..
-
-aws cloudformation describe-stacks --stack-name CloudOpsConversationHistoryStack \
-  --query "Stacks[0].Outputs[?OutputKey=='FrontEndConfig'].OutputValue | [0]" \
-  --output text
+make frontend   # Builds and packages frontend/cloudops-frontend.zip for manual upload.
+make config     # Prints the deployment's FrontEndConfig and maps each value to the Settings controls.
 ```
 
 In **AWS Amplify Hosting**, create an app using **Deploy without Git** and upload `frontend/cloudops-frontend.zip`. Follow [Amplify's manual deployment guide](https://docs.aws.amazon.com/amplify/latest/userguide/manual-deploys.html). Open your app's URL after deployment succeeds. Do not publish your account's URL or configuration as demo evidence.
 
-The setup screen has **individual fields, not a JSON import**. Copy each value from `FrontEndConfig` into these controls:
+`make frontend` bakes the deployment's `FrontEndConfig` into the bundle (`app-config.json`), so opening the app URL takes users straight to **sign-in** — no per-browser setup, and clearing storage or using another browser still works ([#23](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/23)). The baked file holds only non-secret values (pool IDs, the runtime ARN, the API URL, and Regions). Skip to the sign-in step below.
+
+If you build **without** a deployed backend (a "bring your own backend" bundle) or run locally in development, the app shows a setup screen instead. It has **individual fields, not a JSON import** — copy each value from `make config` (the `FrontEndConfig` output) into these controls:
 
 | Output field | Setup control |
 | --- | --- |
 | `cognito.userPoolId` | Amazon Cognito → User Pool ID |
 | `cognito.userPoolClientId` | Amazon Cognito → User Pool Client ID |
 | `cognito.identityPoolId` | Amazon Cognito → Identity Pool ID |
-| `cognito.region` | Amazon Cognito → Region |
+| `cognito.region` | Amazon Cognito → Cognito Region |
 | `agentcore.agentArn` | AgentCore → AgentCore Runtime ARN |
-| `agentcore.region` | AgentCore → Region |
+| `agentcore.region` | AgentCore → AgentCore Region |
 | Optional display label, e.g. `CloudOps Agent` | AgentCore → Agent Name |
 | **`conversationApi.endpoint`** | **Conversation History API → API Endpoint URL** |
 
-Click **Save**; the page reloads. Settings are stored in this browser's `localStorage`, so another browser needs its own setup. The history endpoint currently looks optional but is required for the sidebar ([#20](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/20)).
+Click **Save**; the page reloads. Setup-form settings are stored in this browser's `localStorage`; the Conversation History API endpoint is required.
 
-### 6. Sign in and send the first query
+### 5. Sign in and send the first query
 
 1. Sign in as **`admin`**, using the temporary password emailed to `COGNITO_ADMIN_EMAIL`. Change it when prompted. The bootstrap user belongs to the Cognito `Administrators` group.
-2. **Click New Conversation before sending.** The current first-send path otherwise fails to save history ([#19](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/19)).
+2. Send your first message straight away — the first send now creates a persisted conversation automatically, so the exchange survives a reload ([#19](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/19) fixed). Clicking **New Conversation** first is optional.
 3. Send: **“Use CloudWatch to check active alarms in this Region and summarize in one sentence.”** Include your chosen Region if different from the tool default. Expect an alarm summary or a valid empty result—not a permissions/configuration error.
 4. Wait for the final answer, then reload and reopen the conversation from the sidebar. Both your question and the answer should return.
-5. For the non-admin path, create a separate Cognito user outside `Administrators`. A pricing question is allowed; operational CloudWatch/CloudTrail/Inventory calls are denied. Exact friendly denial wording is not guaranteed ([#18](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/18)).
+5. For the non-admin path, create a separate Cognito user outside `Administrators`. A pricing question is allowed; operational CloudWatch/CloudTrail/Inventory calls are denied and return a role-appropriate "not available for your role" response rather than a generic error ([#18](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/18) fixed). The exact wording is not guaranteed, and it names no denied-tool data.
 
 The UI renders the **final JSON result**, not token-by-token model output. **Stop** cancels the browser's request; it does not guarantee cancellation of backend execution or charges.
 
@@ -291,7 +241,7 @@ For a broken sidebar, check `conversationApi.endpoint` first. For a failed build
 - Operational tool roles are scoped to reads/query operations, not remediation. CloudTrail supports event/trail inspection—not trail management. Read permissions can still reveal sensitive account data; review wildcard resources, tenant boundaries and the actual [IAM policies](cdk/lib/mcp-runtime-stack.ts).
 - Treat model output and tool data as untrusted. Validate answers, avoid secrets in prompts, and perform a security review before expanding privileges or connecting additional tenants/accounts.
 - Do not enable default payload-bearing vended `APPLICATION_LOGS` or add an unfiltered exporter. Runtime payloads contain access tokens. Model-token **counts** are preserved; prompts, tool content and exception details are not exported by the app. Shared trace access/retention remains your responsibility. Production traces cannot support content-dependent evaluations; use only the isolated [synthetic evaluation path](evaluations/README.md).
-- [#18](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/18), [#19](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/19), and [#20](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/20) document current denial-message and history/setup limitations. A successful final answer is not proof that every intermediate tool call or history save succeeded.
+- [#18](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/18) (denial-message classification), [#19](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/19) (first-chat history persistence), and [#20](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/20) (setup validation of the history endpoint) are fixed. A successful final answer is still not proof that every intermediate tool call or history save succeeded; validate telemetry when it matters.
 
 ## Cleanup
 

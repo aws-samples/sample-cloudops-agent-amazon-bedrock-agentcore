@@ -503,7 +503,16 @@ def build_deny_audit_entry(
 
 # Substrings (matched case-insensitively) that signal a Gateway/Policy
 # authorization denial as opposed to an unrelated failure.
+#
+# The first group is the classic set of IAM/authorizer signals. The second group
+# recognizes the AgentCore Gateway *Cedar Policy* denial as it is actually
+# emitted at tool-invocation time: an ``McpError`` whose message reads e.g.
+# "Tool Execution Denied: Tool call not allowed due to policy enforcement
+# [No policy applies to the request (denied by default).]". That message names
+# neither ``AuthorizeActionException`` nor "access denied", so without these
+# markers a genuine policy deny was misclassified as a generic error (issue #18).
 _AUTHORIZATION_DENIAL_MARKERS: tuple[str, ...] = (
+    # Classic IAM / authorizer denial signals.
     "authorizeactionexception",
     "authorizeaction",
     "accessdeniedexception",
@@ -513,6 +522,11 @@ _AUTHORIZATION_DENIAL_MARKERS: tuple[str, ...] = (
     "not permitted for your role",
     "forbidden",
     "403",
+    # AgentCore Gateway Cedar-policy tool-invocation denial signals.
+    "tool execution denied",
+    "not allowed due to policy",
+    "policy enforcement",
+    "denied by default",
 )
 
 # Gateway target name prefixes -> tool category. Used to recover which category
@@ -526,25 +540,49 @@ _CATEGORY_TARGET_PREFIXES: Mapping[str, ToolCategory] = {
 }
 
 
-def _error_text(error: Any) -> str:
+def _error_text(error: Any, _seen: Optional[set[int]] = None) -> str:
     """Collect the human-readable text carried by an error-like value.
 
-    Gathers the string form, the exception class name, and the message of a
-    nested ``ErrorData`` (as exposed by ``mcp.shared.exceptions.McpError`` via
-    its ``.error`` attribute) when present. Returns a single string. This is
-    used only to CLASSIFY the error and to recover the denied category; the raw
-    text is never surfaced to the user (see :func:`build_denial_response`).
+    Gathers the string form, the exception class name, the message of a nested
+    ``ErrorData`` (as exposed by ``mcp.shared.exceptions.McpError`` via its
+    ``.error`` attribute), and -- crucially -- the text of any *nested*
+    exceptions. Nested exceptions reach this classifier two ways in practice:
+
+      * as members of an ``ExceptionGroup`` (its ``.exceptions`` tuple). This is
+        how a Gateway/Policy denial actually surfaces through the strands / anyio
+        ``TaskGroup`` machinery: an ``McpError`` wrapped in one or more nested
+        ``ExceptionGroup``\\s. ``str(ExceptionGroup)`` renders only the group's
+        own label plus a sub-exception *count* -- it does NOT include the
+        members' messages -- so without walking ``.exceptions`` the inner
+        ``McpError`` text (which carries the real policy-denial signal) is
+        invisible to the classifier (issue #18).
+      * through the ``__cause__`` / ``__context__`` chain when an error is
+        re-raised ``from`` another, or wrapped by a strands tool/agent error.
+
+    The tree is walked with an id-based visited guard so cyclic ``__context__``
+    references cannot cause unbounded recursion. The gathered text is used only
+    to CLASSIFY the error and to recover the denied category; the raw text is
+    never surfaced to the user (see :func:`build_denial_response`).
     """
-    parts: List[str] = []
     if error is None:
         return ""
     if isinstance(error, str):
         return error
+
+    if _seen is None:
+        _seen = set()
+    marker = id(error)
+    if marker in _seen:
+        return ""
+    _seen.add(marker)
+
+    parts: List[str] = []
     try:
         parts.append(str(error))
     except Exception:  # pragma: no cover - defensive
         pass
     parts.append(type(error).__name__)
+
     # McpError-style nested ErrorData (``error.error.message`` / ``.code``).
     nested = getattr(error, "error", None)
     if nested is not None and nested is not error:
@@ -552,10 +590,33 @@ def _error_text(error: Any) -> str:
             value = getattr(nested, attr, None)
             if value is not None:
                 parts.append(str(value))
+
     # Some exceptions expose a ``.message`` attribute directly.
     direct_message = getattr(error, "message", None)
     if direct_message is not None:
         parts.append(str(direct_message))
+
+    # ExceptionGroup members: ``str(group)`` omits child messages, so recurse
+    # into the ``.exceptions`` tuple to reach the wrapped denial (e.g. an
+    # ``McpError`` nested one or more groups deep).
+    group_members = getattr(error, "exceptions", None)
+    if isinstance(group_members, (list, tuple)):
+        for member in group_members:
+            if member is not error:
+                child = _error_text(member, _seen)
+                if child:
+                    parts.append(child)
+
+    # Exception chain: ``raise X from Y`` (``__cause__``) and implicit chaining
+    # (``__context__``). Walk both so a denial re-raised through wrapper layers
+    # is still seen by the classifier.
+    for chained_attr in ("__cause__", "__context__"):
+        chained = getattr(error, chained_attr, None)
+        if chained is not None and chained is not error:
+            child = _error_text(chained, _seen)
+            if child:
+                parts.append(child)
+
     return " ".join(parts)
 
 
@@ -564,11 +625,15 @@ def is_authorization_denial(error: Any) -> bool:
 
     Classifies an exception (or error string) raised while invoking a tool
     through the Gateway. Returns ``True`` when the error's type name or message
-    matches a known authorization-denial signal (e.g. ``AuthorizeActionException``,
-    "access denied", "not authorized", HTTP 403), so the runtime can map it to a
-    role-appropriate response (Req 8.5). Returns ``False`` for unrelated
-    failures (e.g. a target-unavailable/timeout error), which fall through to
-    the runtime's generic error handler.
+    matches a known authorization-denial signal -- both the classic
+    IAM/authorizer signals (e.g. ``AuthorizeActionException``, "access denied",
+    "not authorized", HTTP 403) and the AgentCore Gateway *Cedar Policy*
+    tool-invocation denial ("Tool Execution Denied ... policy enforcement ...
+    denied by default"), including when that ``McpError`` is wrapped in one or
+    more ``ExceptionGroup``\\s or an exception chain (issue #18). The runtime can
+    then map it to a role-appropriate response (Req 8.5). Returns ``False`` for
+    unrelated failures (e.g. a target-unavailable/timeout error), which fall
+    through to the runtime's generic error handler.
     """
     text = _error_text(error).lower()
     if not text:
