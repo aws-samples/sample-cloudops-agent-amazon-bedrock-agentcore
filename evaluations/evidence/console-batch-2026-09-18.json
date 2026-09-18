@@ -1,0 +1,2774 @@
+{
+  "region": "us-east-1",
+  "logGroup": "/cloudops/evaluations/fixtures/20260918_062451",
+  "jobs": [
+    {
+      "batchEvaluationId": "cloudops_baseline_20260918_verified-e861b35767",
+      "batchEvaluationArn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+      "batchEvaluationName": "cloudops_baseline_20260918_verified",
+      "status": "COMPLETED",
+      "createdAt": "2026-09-18 06:28:30.950655+00:00",
+      "evaluators": [
+        {
+          "evaluatorId": "Builtin.Helpfulness"
+        },
+        {
+          "evaluatorId": "Builtin.Faithfulness"
+        },
+        {
+          "evaluatorId": "Builtin.Correctness"
+        }
+      ],
+      "dataSourceConfig": {
+        "cloudWatchLogs": {
+          "serviceNames": [
+            "cloudops_fixture_evaluation"
+          ],
+          "logGroupNames": [
+            "/cloudops/evaluations/fixtures/20260918_062451"
+          ],
+          "filterConfig": {
+            "sessionTraceIds": [
+              {
+                "sessionId": "6c05903d-5d47-4f2a-aa8d-127730f0a29e",
+                "traceIds": [
+                  "8b96c607ebc2823c5869b19ece784ae0"
+                ]
+              },
+              {
+                "sessionId": "c0994c6e-7691-4ff5-b98e-8b732d01c95d",
+                "traceIds": [
+                  "35fbf7ba93d1bdb2aa8ca116995a0587"
+                ]
+              },
+              {
+                "sessionId": "59f2df52-e34d-4207-83b4-e90a89e21198",
+                "traceIds": [
+                  "48bd976f11cfc84792d43c39622c1ecd"
+                ]
+              },
+              {
+                "sessionId": "ce003fbf-0360-4932-b4c2-362092c7cf1d",
+                "traceIds": [
+                  "4e24e4ee5850d6c04f54832fddf8d36e"
+                ]
+              },
+              {
+                "sessionId": "e69146d0-3476-4595-b624-83a15d31621d",
+                "traceIds": [
+                  "ccd0241817f7009e443b4e9157e60399"
+                ]
+              },
+              {
+                "sessionId": "627b5c7e-ee8c-4c4c-a130-597895fb6640",
+                "traceIds": [
+                  "32dd490341aa60f5c111519ce0026acc"
+                ]
+              },
+              {
+                "sessionId": "dd56c3b7-d10a-4345-90a6-adfee5c6a564",
+                "traceIds": [
+                  "ddaa20078cd98f51fe1c094417198611"
+                ]
+              },
+              {
+                "sessionId": "95925325-daef-451d-b389-ae7cd20ba5cb",
+                "traceIds": [
+                  "4e4396d9b9bb2cd752c0d5849756b9ba"
+                ]
+              },
+              {
+                "sessionId": "940fc3fc-0c88-40cf-aef3-5aaae09c86bd",
+                "traceIds": [
+                  "ce747d7411b5636684f4f5e511545087"
+                ]
+              },
+              {
+                "sessionId": "b0b7baa3-1e90-4ff3-be4f-d49e8da2b786",
+                "traceIds": [
+                  "74ee91ab92609f89c594b8d2dbeb2995"
+                ]
+              },
+              {
+                "sessionId": "e00badf2-6330-457a-bf29-4b51f70170cf",
+                "traceIds": [
+                  "1eb564de9f8941c8ad01314f2bf58d94"
+                ]
+              },
+              {
+                "sessionId": "db025fb0-9a24-4857-8d89-5523c8d1264e",
+                "traceIds": [
+                  "ea0030b4089400c7cff4e8db18a33db0"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "outputConfig": {
+        "cloudWatchConfig": {
+          "logGroupName": "/aws/bedrock-agentcore/evaluations/batch-evaluations/results/default",
+          "logStreamName": "run-cloudops_baseline_20260918_verified-e861b35767",
+          "metricsNamespace": "Bedrock-AgentCore/Evaluations",
+          "resultDestination": "DEDICATED_LOG_GROUP"
+        }
+      },
+      "evaluationResults": {
+        "numberOfSessionsCompleted": 12,
+        "numberOfSessionsInProgress": 0,
+        "numberOfSessionsFailed": 0,
+        "totalNumberOfSessions": 12,
+        "numberOfSessionsIgnored": 0,
+        "evaluatorSummaries": [
+          {
+            "evaluatorId": "Builtin.Faithfulness",
+            "statistics": {
+              "averageScore": 0.96
+            },
+            "totalEvaluated": 12,
+            "totalFailed": 0
+          },
+          {
+            "evaluatorId": "Builtin.Helpfulness",
+            "statistics": {
+              "averageScore": 0.96
+            },
+            "totalEvaluated": 12,
+            "totalFailed": 0
+          },
+          {
+            "evaluatorId": "Builtin.Correctness",
+            "statistics": {
+              "averageScore": 0.92
+            },
+            "totalEvaluated": 12,
+            "totalFailed": 0
+          }
+        ]
+      },
+      "description": "Synthetic CloudOps fixtures; 12-case baseline; excludes sanity",
+      "updatedAt": "2026-09-18 06:29:39.363515+00:00",
+      "perSessionResults": [
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "48bd976f11cfc84792d43c39622c1ecd",
+          "timeUnixNano": 1789704096546214000,
+          "observedTimeUnixNano": 1789712922643483396,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Correctness",
+            "session.id": "59f2df52-e34d-4207-83b4-e90a89e21198",
+            "gen_ai.response.id": "48bd976f11cfc84792d43c39622c1ecd",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The agent response correctly states the total cost of $1.20 for 10 hours at $0.12/hour, which matches the expected response. The agent also correctly excludes extras. The expected response mentions it's a synthetic/demo quote and not a real AWS list price, but the agent doesn't explicitly state this caveat. However, the user query specifically asks about 'the demo quote,' and the agent correctly identifies it as demo data. The core factual answer (price calculation) is accurate and complete. The missing disclaimer about it not being a real AWS price is a minor supplementary detail that doesn't affect the correctness of the answer to the user's specific question about cost.",
+            "gen_ai.evaluation.score.label": "Correct",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Correctness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Correct",
+          "_aws": {
+            "Timestamp": 1789704096546,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Correctness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Correctness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "48bd976f11cfc84792d43c39622c1ecd",
+          "timeUnixNano": 1789704096546214000,
+          "observedTimeUnixNano": 1789712922643593493,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Helpfulness",
+            "session.id": "59f2df52-e34d-4207-83b4-e90a89e21198",
+            "gen_ai.response.id": "48bd976f11cfc84792d43c39622c1ecd",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The user asked a specific question: what does 10 hours of demo.small Linux shared compute cost, excluding extras? The assistant retrieved the demo data showing an hourly rate of $0.12, then clearly calculated the total cost ($1.20), showed the math, and confirmed the configuration details (instance type, OS, tenancy) while explicitly noting extras are excluded. The response directly answers the user's question with a clear calculation breakdown. It's well-formatted, accurate based on the tool output, and addresses all aspects of the user's request. The response is comprehensive and leaves no ambiguity about the answer.",
+            "gen_ai.evaluation.score.label": "Above And Beyond",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Helpfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Above And Beyond",
+          "_aws": {
+            "Timestamp": 1789704096546,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Helpfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Helpfulness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "48bd976f11cfc84792d43c39622c1ecd",
+          "timeUnixNano": 1789704096546214000,
+          "observedTimeUnixNano": 1789712922643602648,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Faithfulness",
+            "session.id": "59f2df52-e34d-4207-83b4-e90a89e21198",
+            "gen_ai.response.id": "48bd976f11cfc84792d43c39622c1ecd",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The tool output returned: hourlyUSD = 0.12, hours = 10, instanceType = demo.small, operatingSystem = Linux, tenancy = Shared, synthetic = true.\n\nThe assistant's response states:\n- Hourly rate: $0.12/hour \u2713 (matches tool output)\n- Duration: 10 hours \u2713 (matches the query)\n- Total cost: $0.12 \u00d7 10 = $1.20 \u2713 (correct calculation)\n- Instance type: demo.small \u2713\n- Operating System: Linux \u2713\n- Tenancy: Shared \u2713\n- Excludes extras \u2713 (as requested by user)\n\nAll information in the assistant's response is consistent with the tool output and the user's request. The calculation is correct, and no conflicting information is present.",
+            "gen_ai.evaluation.score.label": "Completely Yes",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Faithfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Completely Yes",
+          "_aws": {
+            "Timestamp": 1789704096546,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Faithfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Faithfulness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "8b96c607ebc2823c5869b19ece784ae0",
+          "timeUnixNano": 1789704080961427000,
+          "observedTimeUnixNano": 1789712923754185189,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Correctness",
+            "session.id": "6c05903d-5d47-4f2a-aa8d-127730f0a29e",
+            "gen_ai.response.id": "8b96c607ebc2823c5869b19ece784ae0",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The agent response correctly states the total unblended cost of $100.00 for September 1, 2026, identifies EC2 as the highest cost service at $80.00, and S3 at $20.00. These match the expected response exactly. The agent provides additional context (percentages, optimization suggestions) which is acceptable. All core factual information is accurate and complete.",
+            "gen_ai.evaluation.score.label": "Correct",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Correctness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Correct",
+          "_aws": {
+            "Timestamp": 1789704080961,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Correctness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Correctness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "8b96c607ebc2823c5869b19ece784ae0",
+          "timeUnixNano": 1789704080961427000,
+          "observedTimeUnixNano": 1789712923754274473,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Faithfulness",
+            "session.id": "6c05903d-5d47-4f2a-aa8d-127730f0a29e",
+            "gen_ai.response.id": "8b96c607ebc2823c5869b19ece784ae0",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "Let me analyze the assistant's response against the tool output:\n\n1. Tool output: `{\"period\": \"2026-09-01/2026-09-02 exclusive\", \"unit\": \"USD\", \"services\": {\"EC2\": 80, \"S3\": 20}}`\n\n2. Assistant states:\n   - Total Unblended Cost: $100.00 \u2192 EC2 ($80) + S3 ($20) = $100. This is correct.\n   - EC2: $80.00 (80% of total) \u2192 Correct\n   - S3: $20.00 (20% of total) \u2192 Correct\n   - EC2 was the highest cost service \u2192 Correct (80 > 20)\n   - EC2 accounting for 80% of total daily costs \u2192 Correct\n\nAll figures and claims in the assistant's response are consistent with the tool output. The assistant correctly calculated the total, correctly identified EC2 as the most expensive service, and correctly computed the percentages. The additional offer to help optimize EC2 spending is chit-chat/helpful suggestion that doesn't conflict with any data.\n\nThe response is completely faithful to the conversation history.",
+            "gen_ai.evaluation.score.label": "Completely Yes",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Faithfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Completely Yes",
+          "_aws": {
+            "Timestamp": 1789704080961,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Faithfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Faithfulness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "8b96c607ebc2823c5869b19ece784ae0",
+          "timeUnixNano": 1789704080961427000,
+          "observedTimeUnixNano": 1789712923754292207,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Helpfulness",
+            "session.id": "6c05903d-5d47-4f2a-aa8d-127730f0a29e",
+            "gen_ai.response.id": "8b96c607ebc2823c5869b19ece784ae0",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The user asked two specific questions: (1) what was the total unblended cost for September 1, 2026, and (2) which service cost the most. The assistant's response directly answers both questions clearly and accurately based on the tool output:\n\n1. Total cost: $100.00 (correctly summed EC2's $80 + S3's $20)\n2. Most expensive service: EC2 at $80 (80% of total)\n\nThe response is well-formatted with clear visual hierarchy using bold text and bullet points. It provides percentage breakdowns which add useful context beyond what was strictly asked. Additionally, the assistant proactively offers to help with EC2 cost optimization, which anticipates a natural follow-up concern the user might have after learning EC2 is their biggest cost driver.\n\nThe response fully answers the user's questions, presents the data clearly, adds helpful percentage context, and offers actionable next steps for cost optimization. This goes slightly beyond just answering the questions by anticipating the user's potential next concern (how to reduce costs). This qualifies as 'Above And Beyond' since it's very helpful and anticipates general user concerns about cost optimization.",
+            "gen_ai.evaluation.score.label": "Above And Beyond",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Helpfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Above And Beyond",
+          "_aws": {
+            "Timestamp": 1789704080961,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Helpfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Helpfulness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "35fbf7ba93d1bdb2aa8ca116995a0587",
+          "timeUnixNano": 1789704087435464000,
+          "observedTimeUnixNano": 1789712924754274644,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Correctness",
+            "session.id": "c0994c6e-7691-4ff5-b98e-8b732d01c95d",
+            "gen_ai.response.id": "35fbf7ba93d1bdb2aa8ca116995a0587",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The agent's response conveys the same core factual content as the expected response: no cost data was returned for September 1, 2026, and this does not establish zero spend. The agent explicitly states 'there is no cost data available for September 1, 2026' and notes 'the system notes that \"zero spend is not established\"' - directly matching the expected response's key points. The additional context (reasons for missing data, recommendations) is supplementary and doesn't contradict the core answer. The essential information matches.",
+            "gen_ai.evaluation.score.label": "Correct",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Correctness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Correct",
+          "_aws": {
+            "Timestamp": 1789704087435,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Correctness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Correctness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "35fbf7ba93d1bdb2aa8ca116995a0587",
+          "timeUnixNano": 1789704087435464000,
+          "observedTimeUnixNano": 1789712924754367931,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Helpfulness",
+            "session.id": "c0994c6e-7691-4ff5-b98e-8b732d01c95d",
+            "gen_ai.response.id": "35fbf7ba93d1bdb2aa8ca116995a0587",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The user asked about spending on September 1, 2026. The tool returned no data for that date. The assistant's response:\n\n1. Clearly communicates the result (no data available)\n2. Provides multiple plausible explanations for why data might be missing\n3. Offers actionable next steps (check back later, look at previous days, check CloudWatch)\n4. Proactively offers to retrieve data for adjacent dates to help the user understand their spending patterns\n\nThe response is transparent about the data limitation, explains it in user-friendly terms, and offers concrete alternatives. The assistant goes beyond just reporting 'no data' by providing context about AWS billing delays and offering to pivot to related queries that could still help the user understand their costs. This moves the user multiple steps toward their goal by both explaining the current situation and offering paths forward.",
+            "gen_ai.evaluation.score.label": "Above And Beyond",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Helpfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Above And Beyond",
+          "_aws": {
+            "Timestamp": 1789704087435,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Helpfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Helpfulness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "35fbf7ba93d1bdb2aa8ca116995a0587",
+          "timeUnixNano": 1789704087435464000,
+          "observedTimeUnixNano": 1789712924754383515,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Faithfulness",
+            "session.id": "c0994c6e-7691-4ff5-b98e-8b732d01c95d",
+            "gen_ai.response.id": "35fbf7ba93d1bdb2aa8ca116995a0587",
+            "gen_ai.evaluation.score.value": 0.75,
+            "gen_ai.evaluation.explanation": "The tool output states: 'No cost data available for this interval; zero spend is not established.' The assistant's response correctly reports that there is no cost data available for September 1, 2026, which aligns with the tool output.\n\nHowever, the assistant adds an interpretation that 'today is September 1, 2026' as a possible reason for the missing data. The tool output does not confirm what today's date is, so this is an assumption. But this is a reasonable inference rather than a direct conflict with the tool output.\n\nThe assistant also mentions AWS billing delays, CloudWatch metrics, and suggests checking August 31st data - these are general knowledge additions not contradicted by the tool output.\n\nThe key claim - that no cost data is available for September 1, 2026 - is faithfully represented. The note about 'zero spend is not established' is also correctly referenced. The additional context provided (reasons why data might be missing, recommendations) doesn't conflict with the tool output, though it goes beyond what the tool confirmed.\n\nOverall, the response is largely faithful to the conversation history and tool output, with minor additions that are reasonable inferences rather than conflicts.",
+            "gen_ai.evaluation.score.label": "Generally Yes",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Faithfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Generally Yes",
+          "_aws": {
+            "Timestamp": 1789704087435,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Faithfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Faithfulness": 0.75
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "ddaa20078cd98f51fe1c094417198611",
+          "timeUnixNano": 1789704134665821000,
+          "observedTimeUnixNano": 1789712924758456703,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Correctness",
+            "session.id": "dd56c3b7-d10a-4345-90a6-adfee5c6a564",
+            "gen_ai.response.id": "ddaa20078cd98f51fe1c094417198611",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The agent response correctly identifies that 'demo-operator' stopped the 'demo-instance' at 10:15 UTC on September 1, 2026, which matches the expected response exactly. The agent provides additional context (mentioning CloudTrail audit logs and the StopInstances API call) but the core factual content is accurate and complete.",
+            "gen_ai.evaluation.score.label": "Correct",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Correctness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Correct",
+          "_aws": {
+            "Timestamp": 1789704134665,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Correctness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Correctness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "ddaa20078cd98f51fe1c094417198611",
+          "timeUnixNano": 1789704134665821000,
+          "observedTimeUnixNano": 1789712924758554645,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Helpfulness",
+            "session.id": "dd56c3b7-d10a-4345-90a6-adfee5c6a564",
+            "gen_ai.response.id": "ddaa20078cd98f51fe1c094417198611",
+            "gen_ai.evaluation.score.value": 0.83,
+            "gen_ai.evaluation.explanation": "The user asked a specific question: who stopped demo-instance between 10:00 and 11:00 UTC on September 1, 2026? The assistant directly answered this question by identifying 'demo-operator' as the actor, providing the exact timestamp (10:15:00 UTC), and citing the source (CloudTrail audit logs). The response is clear, concise, and directly addresses the user's query. It confirms the event name (StopInstances), the actor, the resource, and the time - all the relevant details from the tool output. The response fully satisfies the user's goal without unnecessary information or detours.",
+            "gen_ai.evaluation.score.label": "Very Helpful",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Helpfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Very Helpful",
+          "_aws": {
+            "Timestamp": 1789704134665,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Helpfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Helpfulness": 0.83
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "ddaa20078cd98f51fe1c094417198611",
+          "timeUnixNano": 1789704134665821000,
+          "observedTimeUnixNano": 1789712924758572066,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Faithfulness",
+            "session.id": "dd56c3b7-d10a-4345-90a6-adfee5c6a564",
+            "gen_ai.response.id": "ddaa20078cd98f51fe1c094417198611",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The tool output from cloudtrailMcp___get_demo_data returned: {\"windowUTC\": \"2026-09-01T10:00:00Z/2026-09-01T11:00:00Z\", \"events\": [{\"eventName\": \"StopInstances\", \"actor\": \"demo-operator\", \"resource\": \"demo-instance\", \"time\": \"2026-09-01T10:15:00Z\"}]}\n\nThe assistant's response states:\n1. 'demo-operator' stopped the demo-instance - matches the 'actor' field in the tool output\n2. At 10:15:00 UTC on September 1, 2026 - matches the 'time' field in the tool output\n3. StopInstances API call - matches the 'eventName' field in the tool output\n4. During the time window between 10:00 and 11:00 UTC - matches the 'windowUTC' field in the tool output\n\nAll information in the assistant's response is consistent with and directly supported by the tool output. There are no conflicts or contradictions.",
+            "gen_ai.evaluation.score.label": "Completely Yes",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Faithfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Completely Yes",
+          "_aws": {
+            "Timestamp": 1789704134665,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Faithfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Faithfulness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "ccd0241817f7009e443b4e9157e60399",
+          "timeUnixNano": 1789704113147970000,
+          "observedTimeUnixNano": 1789712924836719244,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Correctness",
+            "session.id": "e69146d0-3476-4595-b624-83a15d31621d",
+            "gen_ai.response.id": "ccd0241817f7009e443b4e9157e60399",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The agent correctly states that no alarms are currently in ALARM state, which matches the expected response's core fact. The agent adds that alarms are 'either in OK state or have insufficient data' and that 'systems appear to be operating normally' - the latter slightly overclaims compared to the expected response's caveat that 'this alone does not prove every resource is healthy.' However, the expected response's caveat is a minor supplementary note, not a core factual requirement. The main factual answer - no alarms in ALARM state - is correctly conveyed. The omission of the health caveat is minor and doesn't constitute a critical factual error.",
+            "gen_ai.evaluation.score.label": "Correct",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Correctness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Correct",
+          "_aws": {
+            "Timestamp": 1789704113147,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Correctness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Correctness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "ccd0241817f7009e443b4e9157e60399",
+          "timeUnixNano": 1789704113147970000,
+          "observedTimeUnixNano": 1789712924836798557,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Helpfulness",
+            "session.id": "e69146d0-3476-4595-b624-83a15d31621d",
+            "gen_ai.response.id": "ccd0241817f7009e443b4e9157e60399",
+            "gen_ai.evaluation.score.value": 0.83,
+            "gen_ai.evaluation.explanation": "The user asked a simple, direct question: 'Are any alarms currently in ALARM state?' The tool returned data showing an empty alarms array with stateFilter 'ALARM' and complete: true. The assistant's response directly answers the question with a clear 'No alarms are currently in ALARM state.' It also adds some context about what that means (systems operating normally). However, the assistant adds an inference that 'All your CloudWatch alarms are either in OK state or have insufficient data' which wasn't actually confirmed by the tool data - the tool only confirmed there are no alarms in ALARM state, not what state they ARE in. This is a minor overreach but doesn't significantly harm the response. The core answer is clear, direct, and accurately reflects the tool output. The response is well-formatted with bold text for emphasis and provides a complete answer to the user's question.",
+            "gen_ai.evaluation.score.label": "Very Helpful",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Helpfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Very Helpful",
+          "_aws": {
+            "Timestamp": 1789704113147,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Helpfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Helpfulness": 0.83
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "ccd0241817f7009e443b4e9157e60399",
+          "timeUnixNano": 1789704113147970000,
+          "observedTimeUnixNano": 1789712924836813442,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Faithfulness",
+            "session.id": "e69146d0-3476-4595-b624-83a15d31621d",
+            "gen_ai.response.id": "ccd0241817f7009e443b4e9157e60399",
+            "gen_ai.evaluation.score.value": 0.75,
+            "gen_ai.evaluation.explanation": "The tool output from 'cloudwatchMcp___get_demo_data' returned: {\"stateFilter\": \"ALARM\", \"alarms\": [], \"complete\": true}, which indicates that there are no alarms currently in ALARM state (empty array).\n\nThe assistant's response states: 'No alarms are currently in ALARM state.' This directly matches the tool output showing an empty alarms array.\n\nHowever, the assistant also adds: 'All your CloudWatch alarms are either in OK state or have insufficient data.' This is an inference not supported by the tool output. The tool only confirmed there are no alarms in ALARM state, but did not provide information about what state the other alarms are in (OK or INSUFFICIENT_DATA). This is a minor extrapolation beyond what the data shows.\n\nDespite this small inference, the core claim (no alarms in ALARM state) is accurate and faithful to the tool output. The additional statement about OK state or insufficient data is an assumption not directly contradicted by the data but also not confirmed by it. This is a minor issue that doesn't significantly conflict with the conversation history.",
+            "gen_ai.evaluation.score.label": "Generally Yes",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Faithfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Generally Yes",
+          "_aws": {
+            "Timestamp": 1789704113147,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Faithfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Faithfulness": 0.75
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "32dd490341aa60f5c111519ce0026acc",
+          "timeUnixNano": 1789704120903581000,
+          "observedTimeUnixNano": 1789712925131753432,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Correctness",
+            "session.id": "627b5c7e-ee8c-4c4c-a130-597895fb6640",
+            "gen_ai.response.id": "32dd490341aa60f5c111519ce0026acc",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The candidate response correctly identifies that demo-cpu has been alarming longer than demo-latency. The time difference calculation is correct: demo-cpu started at 11:30 UTC and demo-latency started at 11:50 UTC, making the difference exactly 20 minutes. The response accurately states the 20-minute difference and correctly notes the start times for both alarms. All factual claims are accurate based on the tool output data.",
+            "gen_ai.evaluation.score.label": "Perfectly Correct",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Correctness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Perfectly Correct",
+          "_aws": {
+            "Timestamp": 1789704120903,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Correctness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Correctness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "32dd490341aa60f5c111519ce0026acc",
+          "timeUnixNano": 1789704120903581000,
+          "observedTimeUnixNano": 1789712925131853320,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Helpfulness",
+            "session.id": "627b5c7e-ee8c-4c4c-a130-597895fb6640",
+            "gen_ai.response.id": "32dd490341aa60f5c111519ce0026acc",
+            "gen_ai.evaluation.score.value": 0.83,
+            "gen_ai.evaluation.explanation": "The user asked a specific follow-up question: which alarm has been alarming longer, and by how many minutes? The assistant directly answers both parts of the question clearly and accurately:\n\n1. Identifies demo-cpu as the alarm that has been alarming longer\n2. States the difference is 20 minutes (11:30 vs 11:50)\n3. Provides supporting context showing the total duration of each alarm (30 min vs 10 min)\n\nThe response is concise, directly addresses both parts of the question, and uses the data already retrieved in the previous turn without needing additional tool calls. The math is correct (11:50 - 11:30 = 20 minutes). The formatting is clean and easy to read. This fully satisfies the user's query with no unnecessary detours or missing information.",
+            "gen_ai.evaluation.score.label": "Very Helpful",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Helpfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Very Helpful",
+          "_aws": {
+            "Timestamp": 1789704120903,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Helpfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Helpfulness": 0.83
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "32dd490341aa60f5c111519ce0026acc",
+          "timeUnixNano": 1789704120903581000,
+          "observedTimeUnixNano": 1789712925131864664,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Faithfulness",
+            "session.id": "627b5c7e-ee8c-4c4c-a130-597895fb6640",
+            "gen_ai.response.id": "32dd490341aa60f5c111519ce0026acc",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "Let me analyze the assistant's last response against the conversation history.\n\nFrom the tool output, we know:\n- demo-cpu entered ALARM state at 2026-09-01T11:30:00Z\n- demo-latency entered ALARM state at 2026-09-01T11:50:00Z\n- Snapshot time: 2026-09-01T12:00:00Z\n\nThe assistant's response states:\n1. demo-cpu has been alarming longer - CORRECT (11:30 vs 11:50)\n2. Time difference: 20 minutes - CORRECT (11:50 - 11:30 = 20 minutes)\n3. demo-cpu entered ALARM at 11:30:00 UTC - CORRECT\n4. demo-latency entered ALARM at 11:50:00 UTC - CORRECT\n5. demo-cpu has been in ALARM for 30 minutes total - CORRECT (12:00 - 11:30 = 30 minutes)\n6. demo-latency has been alarming for 10 minutes - CORRECT (12:00 - 11:50 = 10 minutes)\n\nAll information in the assistant's response is consistent with the tool output data. The calculations are accurate and the conclusions drawn are faithful to the conversation history.",
+            "gen_ai.evaluation.score.label": "Completely Yes",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Faithfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Completely Yes",
+          "_aws": {
+            "Timestamp": 1789704120903,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Faithfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Faithfulness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "4e4396d9b9bb2cd752c0d5849756b9ba",
+          "timeUnixNano": 1789704149269499000,
+          "observedTimeUnixNano": 1789712925610868573,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Helpfulness",
+            "session.id": "95925325-daef-451d-b389-ae7cd20ba5cb",
+            "gen_ai.response.id": "4e4396d9b9bb2cd752c0d5849756b9ba",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The user asked a specific question: were there DeleteTrail events between 10:00 and 11:00 UTC on September 1, 2026? The assistant:\n1. Directly answered the question with a clear 'No' - no DeleteTrail events were found in that window\n2. Correctly interpreted the tool output (empty events array) and communicated it clearly\n3. Added context about why DeleteTrail events are important to monitor (security perspective)\n4. Offered to help with further investigation if needed\n\nThe response directly addresses the user's question, provides the answer clearly, adds relevant security context that a user investigating CloudTrail events would likely find valuable, and offers to continue helping. This goes slightly beyond just answering the question by explaining the significance of DeleteTrail events and offering follow-up assistance. The response is concise, accurate based on tool output, and actionable.",
+            "gen_ai.evaluation.score.label": "Above And Beyond",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Helpfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Above And Beyond",
+          "_aws": {
+            "Timestamp": 1789704149269,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Helpfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Helpfulness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "4e4396d9b9bb2cd752c0d5849756b9ba",
+          "timeUnixNano": 1789704149269499000,
+          "observedTimeUnixNano": 1789712925610975026,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Faithfulness",
+            "session.id": "95925325-daef-451d-b389-ae7cd20ba5cb",
+            "gen_ai.response.id": "4e4396d9b9bb2cd752c0d5849756b9ba",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The tool output returned: '{\"eventName\": \"DeleteTrail\", \"windowUTC\": \"2026-09-01T10:00:00Z/2026-09-01T11:00:00Z\", \"events\": []}'\n\nThis clearly shows that the events array is empty, meaning no DeleteTrail events were found in that time window.\n\nThe assistant's response states: 'No DeleteTrail events were found between 10:00 and 11:00 UTC on September 1, 2026.' This directly matches the tool output.\n\nThe assistant also provides additional context about why DeleteTrail events are important to monitor, which is supplementary information not conflicting with the tool output.\n\nAll key facts in the assistant's response are consistent with the conversation history and tool outputs. The response accurately reflects the empty events list returned by the tool.",
+            "gen_ai.evaluation.score.label": "Completely Yes",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Faithfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Completely Yes",
+          "_aws": {
+            "Timestamp": 1789704149269,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Faithfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Faithfulness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "4e4396d9b9bb2cd752c0d5849756b9ba",
+          "timeUnixNano": 1789704149269499000,
+          "observedTimeUnixNano": 1789712925610991941,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Correctness",
+            "session.id": "95925325-daef-451d-b389-ae7cd20ba5cb",
+            "gen_ai.response.id": "4e4396d9b9bb2cd752c0d5849756b9ba",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The agent response correctly states that no DeleteTrail events were found between 10:00 and 11:00 UTC on September 1, 2026. The expected response also indicates no DeleteTrail events were returned for that time window. Both convey the same core factual answer.\n\nThe expected response includes a caveat that 'This is limited to the queried scope and is not proof no changes happened elsewhere.' The agent response does not explicitly include this caveat, but it does mention that if investigating other concerns, it can help search for other events. The agent also adds security context about why DeleteTrail events matter, which is supplementary information.\n\nThe missing caveat about scope limitation is a minor point - the agent's response doesn't contradict it, just doesn't explicitly state it. The core factual answer (no DeleteTrail events found in that window) is correctly conveyed. This omission is not critical enough to make the response INCORRECT.",
+            "gen_ai.evaluation.score.label": "Correct",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Correctness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Correct",
+          "_aws": {
+            "Timestamp": 1789704149269,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Correctness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Correctness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "4e24e4ee5850d6c04f54832fddf8d36e",
+          "timeUnixNano": 1789704110405453000,
+          "observedTimeUnixNano": 1789712926165847166,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Correctness",
+            "session.id": "ce003fbf-0360-4932-b4c2-362092c7cf1d",
+            "gen_ai.response.id": "4e24e4ee5850d6c04f54832fddf8d36e",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The agent response correctly identifies all three alarms and their states: demo-cpu in ALARM, demo-disk in OK, and demo-queue in INSUFFICIENT_DATA. It correctly identifies demo-cpu as needing attention. The expected response also mentions investigating the missing data for demo-queue, which the agent acknowledges by noting it 'doesn't have enough data yet to determine state' but doesn't explicitly flag it as needing investigation/attention. However, the agent does mention it under 'Monitoring' status and explains the INSUFFICIENT_DATA state. The core factual content about all three alarms and their states is accurate. The minor omission is not explicitly calling out demo-queue as also needing investigation, but the agent does acknowledge its unusual state. This is a minor omission rather than a critical factual error.",
+            "gen_ai.evaluation.score.label": "Correct",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Correctness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Correct",
+          "_aws": {
+            "Timestamp": 1789704110405,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Correctness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Correctness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "4e24e4ee5850d6c04f54832fddf8d36e",
+          "timeUnixNano": 1789704110405453000,
+          "observedTimeUnixNano": 1789712926165939750,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Helpfulness",
+            "session.id": "ce003fbf-0360-4932-b4c2-362092c7cf1d",
+            "gen_ai.response.id": "4e24e4ee5850d6c04f54832fddf8d36e",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The user asked to summarize alarm states and identify which alarm needs attention. The assistant's response directly addresses both parts of the question:\n\n1. **Summary of alarm states**: The response presents all three alarms (demo-cpu, demo-disk, demo-queue) in a clear, well-formatted table with their states and status indicators using visual cues (colored circles, bold text).\n\n2. **Which alarm needs attention**: The response clearly identifies demo-cpu as the alarm requiring immediate attention, explaining it's in ALARM state.\n\n3. **Actionable guidance**: Beyond just answering the question, the assistant provides practical next steps for investigating the CPU alarm (checking traffic spikes, instance sizing, scaling options).\n\n4. **Context for other alarms**: The response also explains the other alarms' states (OK for demo-disk, INSUFFICIENT_DATA for demo-queue), giving the user a complete picture.\n\nThe response is well-structured, visually clear, directly answers both parts of the user's question, and goes further by providing actionable recommendations. This moves the user significantly toward their goal of understanding their alarm states and knowing what to do next. The response anticipates follow-up concerns about what to do about the ALARM state. This qualifies as 'Above And Beyond' since it's very helpful and anticipates general user concerns about remediation steps.",
+            "gen_ai.evaluation.score.label": "Above And Beyond",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Helpfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Above And Beyond",
+          "_aws": {
+            "Timestamp": 1789704110405,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Helpfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Helpfulness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "4e24e4ee5850d6c04f54832fddf8d36e",
+          "timeUnixNano": 1789704110405453000,
+          "observedTimeUnixNano": 1789712926165956548,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Faithfulness",
+            "session.id": "ce003fbf-0360-4932-b4c2-362092c7cf1d",
+            "gen_ai.response.id": "4e24e4ee5850d6c04f54832fddf8d36e",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "Let me analyze the assistant's response against the conversation history, particularly the tool outputs.\n\nThe tool output from cloudwatchMcp___get_demo_data returned:\n- demo-cpu: ALARM state\n- demo-disk: OK state\n- demo-queue: INSUFFICIENT_DATA state\n\nThe assistant's response:\n1. Correctly identifies demo-cpu as being in ALARM state \u2713\n2. Correctly identifies demo-disk as being in OK state \u2713\n3. Correctly identifies demo-queue as being in INSUFFICIENT_DATA state \u2713\n4. Correctly identifies demo-cpu as the alarm needing attention \u2713\n5. The table representation accurately reflects the tool data \u2713\n\nThe assistant adds some interpretive information about what the ALARM state might mean (CPU utilization breaching threshold, recommendations for scaling, etc.) which is not directly from the tool output, but this is reasonable inference/advice and doesn't conflict with the data provided.\n\nThe description of demo-queue as 'don't have enough data yet to determine state' is a reasonable interpretation of INSUFFICIENT_DATA state.\n\nAll factual information about alarm states matches the tool output exactly. The response is faithful to the conversation history.",
+            "gen_ai.evaluation.score.label": "Completely Yes",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Faithfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Completely Yes",
+          "_aws": {
+            "Timestamp": 1789704110405,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Faithfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Faithfulness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "1eb564de9f8941c8ad01314f2bf58d94",
+          "timeUnixNano": 1789704174601514000,
+          "observedTimeUnixNano": 1789712927612565995,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Correctness",
+            "session.id": "e00badf2-6330-457a-bf29-4b51f70170cf",
+            "gen_ai.response.id": "1eb564de9f8941c8ad01314f2bf58d94",
+            "gen_ai.evaluation.score.value": 0.0,
+            "gen_ai.evaluation.explanation": "The agent response correctly states that no EKS clusters were found in the demo inventory scope, which matches the expected response's core finding. However, the expected response includes an important caveat: 'This does not establish that all accounts and Regions are empty.' The agent response omits this critical qualification, which is important context for the user to understand the scope limitations of the inventory query. The agent instead offers to show other services or discuss EKS lifecycle management, which doesn't address this important limitation. The missing caveat is substantive because it changes the interpretation of the result - without it, the user might incorrectly conclude that there are definitively no EKS clusters anywhere, rather than understanding the query only covered the demo scope.",
+            "gen_ai.evaluation.score.label": "Incorrect",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Correctness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Incorrect",
+          "_aws": {
+            "Timestamp": 1789704174601,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Correctness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Correctness": 0.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "1eb564de9f8941c8ad01314f2bf58d94",
+          "timeUnixNano": 1789704174601514000,
+          "observedTimeUnixNano": 1789712927612661834,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Faithfulness",
+            "session.id": "e00badf2-6330-457a-bf29-4b51f70170cf",
+            "gen_ai.response.id": "1eb564de9f8941c8ad01314f2bf58d94",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The tool output from 'inventoryMcp__get_demo_data' returned: '{\"service\": \"EKS\", \"scope\": \"demo\", \"clusters\": [], \"complete\": true}'. This clearly shows that the clusters array is empty, meaning there are no EKS clusters in the demo scope.\n\nThe assistant's response states 'there are currently no EKS clusters in the demo scope,' which directly matches the tool output.\n\nThe assistant then adds additional context about what the inventory system can track (cluster names, ARNs, Kubernetes versions, etc.) and mentions other services like RDS/Aurora, OpenSearch, ElastiCache, or MSK. This additional information is not directly contradicted by the tool output - it's supplementary context that the assistant is providing. The tool output doesn't confirm or deny these capabilities, but the assistant is not making claims that conflict with what was returned.\n\nThe core factual claim - that there are no EKS clusters in the demo scope - is completely faithful to the tool output. The additional information about capabilities and other services is supplementary and doesn't conflict with the conversation history.",
+            "gen_ai.evaluation.score.label": "Completely Yes",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Faithfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Completely Yes",
+          "_aws": {
+            "Timestamp": 1789704174601,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Faithfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Faithfulness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "1eb564de9f8941c8ad01314f2bf58d94",
+          "timeUnixNano": 1789704174601514000,
+          "observedTimeUnixNano": 1789712927612688418,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Helpfulness",
+            "session.id": "e00badf2-6330-457a-bf29-4b51f70170cf",
+            "gen_ai.response.id": "1eb564de9f8941c8ad01314f2bf58d94",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The user asked to list EKS clusters in the demo inventory scope. The assistant correctly queried the inventory system, received a result showing no EKS clusters exist in the demo scope, and clearly communicated this finding to the user. The response directly answers the user's question with the actual data from the tool.\n\nAdditionally, the assistant goes beyond just answering the question by:\n1. Clearly stating the result (no EKS clusters)\n2. Explaining what information the system can track about EKS clusters (useful context)\n3. Offering to explore other managed services in the inventory\n4. Offering to discuss EKS version lifecycle management\n\nThe response is accurate based on the tool output, clearly formatted, and provides helpful context about what the inventory system can do. The proactive suggestions about other services and lifecycle management are relevant and potentially useful follow-up options for the user. This moves the user fully to their goal (knowing there are no EKS clusters) while also anticipating potential next steps they might want to take.",
+            "gen_ai.evaluation.score.label": "Above And Beyond",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Helpfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Above And Beyond",
+          "_aws": {
+            "Timestamp": 1789704174601,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Helpfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Helpfulness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "74ee91ab92609f89c594b8d2dbeb2995",
+          "timeUnixNano": 1789704172021105000,
+          "observedTimeUnixNano": 1789712928164907572,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Correctness",
+            "session.id": "b0b7baa3-1e90-4ff3-be4f-d49e8da2b786",
+            "gen_ai.response.id": "74ee91ab92609f89c594b8d2dbeb2995",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The agent response correctly identifies `demo-old` as the cluster past standard support as of September 1, 2026, with standard support ending August 31, 2026. It correctly states extended support is available until August 31, 2027. The expected response also mentions that `demo-new` remains in standard support and notes these are demo dates, not real vendor guidance. The agent omits mentioning `demo-new` still being in standard support and doesn't note these are synthetic/demo dates. However, the core factual content about `demo-old` being past standard support and extended support being available until August 31, 2027 is accurate. The omission of `demo-new` status and the demo disclaimer are minor supplementary details that don't fundamentally change the answer to the user's specific questions ('which cluster is past standard support?' and 'is extended support still available?'). The agent answers both questions correctly.",
+            "gen_ai.evaluation.score.label": "Correct",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Correctness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Correct",
+          "_aws": {
+            "Timestamp": 1789704172021,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Correctness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Correctness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "74ee91ab92609f89c594b8d2dbeb2995",
+          "timeUnixNano": 1789704172021105000,
+          "observedTimeUnixNano": 1789712928164999463,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Faithfulness",
+            "session.id": "b0b7baa3-1e90-4ff3-be4f-d49e8da2b786",
+            "gen_ai.response.id": "74ee91ab92609f89c594b8d2dbeb2995",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "Let me analyze the assistant's response against the tool output:\n\n1. Tool output shows two clusters:\n   - `demo-old`: standardSupportEnd: 2026-08-31, extendedSupportEnd: 2027-08-31\n   - `demo-new`: standardSupportEnd: 2027-08-31, extendedSupportEnd: 2028-08-31\n\n2. As of September 1, 2026:\n   - `demo-old` has standard support end date of August 31, 2026, which means it IS past standard support as of September 1, 2026. \u2713\n   - `demo-new` has standard support end date of August 31, 2027, so it's still in standard support. \u2713\n\n3. The assistant correctly identifies `demo-old` as the cluster past standard support. \u2713\n\n4. The assistant correctly states standard support ended August 31, 2026. \u2713\n\n5. The assistant correctly states extended support is available until August 31, 2027. \u2713\n\n6. The assistant says 'yesterday' referring to August 31, 2026 being the day before September 1, 2026 - this is accurate. \u2713\n\n7. The recommendation about costs and limited feature updates is general advice not from the tool data, but it doesn't conflict with the tool data either.\n\nAll factual claims in the response align with the tool output. The response is faithful to the conversation history.",
+            "gen_ai.evaluation.score.label": "Completely Yes",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Faithfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Completely Yes",
+          "_aws": {
+            "Timestamp": 1789704172021,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Faithfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Faithfulness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "74ee91ab92609f89c594b8d2dbeb2995",
+          "timeUnixNano": 1789704172021105000,
+          "observedTimeUnixNano": 1789712928165017471,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Helpfulness",
+            "session.id": "b0b7baa3-1e90-4ff3-be4f-d49e8da2b786",
+            "gen_ai.response.id": "74ee91ab92609f89c594b8d2dbeb2995",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The user asked two specific questions: (1) which demo cluster is past standard support as of September 1, 2026, and (2) whether extended support is still available. The assistant correctly retrieved the data from the tool and provided clear, accurate answers to both questions. \n\nThe tool data showed: demo-old has standard support ending 2026-08-31 and extended support ending 2027-08-31. As of September 1, 2026, demo-old is indeed past standard support (by one day), and extended support is still available until August 31, 2027.\n\nThe assistant:\n1. Directly answered both questions clearly\n2. Provided specific dates for context\n3. Added a practical recommendation about upgrading\n4. Noted the contrast with demo-new which is still in standard support\n5. Used clear formatting with bold text for easy scanning\n\nThe response goes slightly beyond the basic questions by providing a recommendation about upgrading and noting the typical implications of extended support (additional costs, limited feature updates). This anticipates follow-up concerns the user might have. The response is comprehensive, accurate based on the tool data, and actionable. This qualifies as 'Above And Beyond' since it answers both questions fully and anticipates practical concerns the user would likely have.",
+            "gen_ai.evaluation.score.label": "Above And Beyond",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Helpfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Above And Beyond",
+          "_aws": {
+            "Timestamp": 1789704172021,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Helpfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Helpfulness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "ce747d7411b5636684f4f5e511545087",
+          "timeUnixNano": 1789704154832972000,
+          "observedTimeUnixNano": 1789712928318598341,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Correctness",
+            "session.id": "940fc3fc-0c88-40cf-aef3-5aaae09c86bd",
+            "gen_ai.response.id": "ce747d7411b5636684f4f5e511545087",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The expected response requires: (1) acknowledging CloudTrail lookup is unavailable, (2) stating who changed demo-bucket cannot be determined, (3) suggesting retry or manual inspection when access is restored, and (4) not inventing an actor.\n\nThe agent response correctly: (1) acknowledges CloudTrail demo data is unavailable, (2) does not invent any actor or fabricate who made changes, (3) suggests manual inspection via AWS Console as an alternative. The agent does provide additional detail about how CloudTrail queries work in general, but this is supplementary information that doesn't contradict the expected response.\n\nThe core message matches: data unavailable \u2192 cannot determine who changed the bucket \u2192 provides guidance for when access is restored. The agent doesn't fabricate an actor, which is the critical requirement. The extra explanatory content about how CloudTrail works is acceptable additional context.",
+            "gen_ai.evaluation.score.label": "Correct",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Correctness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Correct",
+          "_aws": {
+            "Timestamp": 1789704154832,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Correctness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Correctness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "ce747d7411b5636684f4f5e511545087",
+          "timeUnixNano": 1789704154832972000,
+          "observedTimeUnixNano": 1789712928318732514,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Faithfulness",
+            "session.id": "940fc3fc-0c88-40cf-aef3-5aaae09c86bd",
+            "gen_ai.response.id": "ce747d7411b5636684f4f5e511545087",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "Let me analyze the assistant's response against the conversation history:\n\n1. The tool output from `cloudtrailMcp___get_demo_data` returned: `{\"status\": \"unavailable\", \"reason\": \"Demo CloudTrail lookup temporarily unavailable; no event data retrieved.\"}` - indicating the service is unavailable.\n\n2. The assistant correctly states that 'the CloudTrail demo data is currently unavailable' - this is consistent with the tool output.\n\n3. The assistant then provides general guidance on how CloudTrail queries would work when available, including types of events to look for and how to identify users. This is supplementary information not contradicted by the conversation history.\n\n4. The assistant mentions a date '2026-09-01' which is not present in the conversation history. This could be the current date in the system, but it's not verifiable from the conversation history alone. However, this doesn't directly conflict with anything stated.\n\n5. The assistant's suggestion to use the AWS Console as an alternative is reasonable and doesn't conflict with any information in the conversation history.\n\nOverall, the assistant's response accurately reflects the tool output (service unavailable) and provides helpful context without contradicting any information from the conversation history. The response is faithful to what was retrieved (or not retrieved) from the tools.",
+            "gen_ai.evaluation.score.label": "Completely Yes",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Faithfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Completely Yes",
+          "_aws": {
+            "Timestamp": 1789704154832,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Faithfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Faithfulness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "ce747d7411b5636684f4f5e511545087",
+          "timeUnixNano": 1789704154832972000,
+          "observedTimeUnixNano": 1789712928318743217,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Helpfulness",
+            "session.id": "940fc3fc-0c88-40cf-aef3-5aaae09c86bd",
+            "gen_ai.response.id": "ce747d7411b5636684f4f5e511545087",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The user asked a simple, direct question: 'Who changed demo-bucket today?' The assistant attempted to retrieve the data using available tools, but the CloudTrail demo data was unavailable. \n\nThe assistant's response:\n1. Clearly communicates the service is unavailable (honest and transparent)\n2. Explains what it would normally do to answer the question (educational)\n3. Lists specific CloudTrail event types relevant to S3 bucket changes\n4. Explains what information would be returned (userIdentity fields)\n5. Provides a manual workaround via AWS Console with step-by-step instructions\n6. Offers continued assistance\n\nThe user's goal was to find out who changed demo-bucket today. Since the data is genuinely unavailable, the assistant cannot directly answer the question. However, it provides a practical alternative path (AWS Console instructions) that could help the user get the answer themselves. The response is clear, organized, and actionable given the constraints.\n\nThe response goes beyond just saying 'unavailable' by providing concrete manual steps the user can take to find the answer themselves. This moves the user toward their goal despite the tool failure. The manual AWS Console instructions are specific and actionable. This qualifies as 'Above and Beyond' because it not only explains the limitation but provides a comprehensive alternative path to achieve the user's goal.",
+            "gen_ai.evaluation.score.label": "Above And Beyond",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Helpfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Above And Beyond",
+          "_aws": {
+            "Timestamp": 1789704154832,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Helpfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Helpfulness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "ea0030b4089400c7cff4e8db18a33db0",
+          "timeUnixNano": 1789704191757990000,
+          "observedTimeUnixNano": 1789712928775466636,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Correctness",
+            "session.id": "db025fb0-9a24-4857-8d89-5523c8d1264e",
+            "gen_ai.response.id": "ea0030b4089400c7cff4e8db18a33db0",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The agent's response correctly conveys the core message of the expected response: inventory access is denied for non-admin users, and an admin would be needed to retrieve cluster information. The agent explicitly states it doesn't have permission to access cluster inventory data, that the current access level only permits billing and pricing queries, and that admin-level access is required. This aligns with the expected response's key points: access is denied for NonAdmin, and an Admin can retrieve cluster information. The agent goes further by providing AWS CLI commands as alternatives, which is additional helpful context but doesn't contradict the core message. The fundamental answer - that cluster names and versions cannot be reported due to insufficient permissions - is correctly communicated.",
+            "gen_ai.evaluation.score.label": "Correct",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Correctness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Correct",
+          "_aws": {
+            "Timestamp": 1789704191757,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Correctness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Correctness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "ea0030b4089400c7cff4e8db18a33db0",
+          "timeUnixNano": 1789704191757990000,
+          "observedTimeUnixNano": 1789712928775575561,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Faithfulness",
+            "session.id": "db025fb0-9a24-4857-8d89-5523c8d1264e",
+            "gen_ai.response.id": "ea0030b4089400c7cff4e8db18a33db0",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "Let me analyze the assistant's response against the conversation history:\n\n1. The tool output from `inventoryMcp__get_demo_data` returned: `{\"status\": \"denied\", \"reason\": \"NonAdmin may access billing and pricing only. Inventory requires Admin. No inventory returned.\"}`\n\n2. The assistant correctly states:\n - It doesn't have permission to access cluster inventory data \u2713\n - The functionality requires Admin-level access \u2713\n - The current access level only permits billing and pricing queries \u2713\n\n3. The assistant then provides suggestions for how to get the data, including AWS CLI commands. These suggestions are not contradicted by the conversation history - they are additional helpful information not covered by the tool outputs.\n\n4. The assistant's characterization of the access denial is accurate and faithful to the tool output.\n\n5. The list of AWS services mentioned (EKS, RDS/Aurora, OpenSearch, ElastiCache, MSK) aligns with what was queried in the tool call.\n\nThe assistant's response accurately reflects the tool output (access denied, requires Admin, NonAdmin can only access billing/pricing) and doesn't contradict any information in the conversation history. The additional AWS CLI suggestions are supplementary information that doesn't conflict with anything in the history.",
+            "gen_ai.evaluation.score.label": "Completely Yes",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Faithfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Completely Yes",
+          "_aws": {
+            "Timestamp": 1789704191757,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Faithfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Faithfulness": 1.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "ea0030b4089400c7cff4e8db18a33db0",
+          "timeUnixNano": 1789704191757990000,
+          "observedTimeUnixNano": 1789712928775588308,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Helpfulness",
+            "session.id": "db025fb0-9a24-4857-8d89-5523c8d1264e",
+            "gen_ai.response.id": "ea0030b4089400c7cff4e8db18a33db0",
+            "gen_ai.evaluation.score.value": 1.0,
+            "gen_ai.evaluation.explanation": "The user's goal is to list all clusters and their versions. The assistant attempted to retrieve this information but was denied due to insufficient permissions (NonAdmin access only allows billing/pricing queries).\n\nThe assistant's response:\n1. Clearly explains why the request failed (permission issue - Admin access required)\n2. Provides actionable alternatives - either requesting Admin access or using AWS CLI/Console directly\n3. Gives specific AWS CLI commands for each relevant service (EKS, RDS/Aurora, OpenSearch, ElastiCache, MSK) that the user could run themselves\n4. Offers to help with what IS available (billing/pricing)\n\nWhile the assistant couldn't fulfill the original request due to access restrictions (not its fault), it maximized helpfulness by:\n- Explaining the limitation clearly\n- Providing concrete workarounds with specific CLI commands\n- Covering all major cluster types the user might be interested in\n\nThe response moves the user toward their goal by giving them the exact commands they need to get the information themselves. This is quite helpful given the constraints. The CLI commands provided are specific and actionable, covering all major AWS managed cluster services. This goes somewhat beyond just explaining the failure - it provides a practical path forward.",
+            "gen_ai.evaluation.score.label": "Above And Beyond",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_baseline_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_baseline_20260918_verified-e861b35767",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Helpfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_baseline_20260918_verified-e861b35767",
+          "runId": "cloudops_baseline_20260918_verified-e861b35767",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Above And Beyond",
+          "_aws": {
+            "Timestamp": 1789704191757,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Helpfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Helpfulness": 1.0
+        }
+      ]
+    },
+    {
+      "batchEvaluationId": "cloudops_sanity_20260918_verified-aabfbcd479",
+      "batchEvaluationArn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_sanity_20260918_verified-aabfbcd479",
+      "batchEvaluationName": "cloudops_sanity_20260918_verified",
+      "status": "COMPLETED",
+      "createdAt": "2026-09-18 06:28:31.832105+00:00",
+      "evaluators": [
+        {
+          "evaluatorId": "Builtin.Helpfulness"
+        },
+        {
+          "evaluatorId": "Builtin.Faithfulness"
+        },
+        {
+          "evaluatorId": "Builtin.Correctness"
+        }
+      ],
+      "dataSourceConfig": {
+        "cloudWatchLogs": {
+          "serviceNames": [
+            "cloudops_fixture_evaluation"
+          ],
+          "logGroupNames": [
+            "/cloudops/evaluations/fixtures/20260918_062451"
+          ],
+          "filterConfig": {
+            "sessionTraceIds": [
+              {
+                "sessionId": "c99084b2-d4d3-48e4-8a2f-28351dbc8f9c",
+                "traceIds": [
+                  "bc33822c3bc04fa2b3f54f05aebc62ac"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "outputConfig": {
+        "cloudWatchConfig": {
+          "logGroupName": "/aws/bedrock-agentcore/evaluations/batch-evaluations/results/default",
+          "logStreamName": "run-cloudops_sanity_20260918_verified-aabfbcd479",
+          "metricsNamespace": "Bedrock-AgentCore/Evaluations",
+          "resultDestination": "DEDICATED_LOG_GROUP"
+        }
+      },
+      "evaluationResults": {
+        "numberOfSessionsCompleted": 1,
+        "numberOfSessionsInProgress": 0,
+        "numberOfSessionsFailed": 0,
+        "totalNumberOfSessions": 1,
+        "numberOfSessionsIgnored": 0,
+        "evaluatorSummaries": [
+          {
+            "evaluatorId": "Builtin.Faithfulness",
+            "statistics": {
+              "averageScore": 0.0
+            },
+            "totalEvaluated": 1,
+            "totalFailed": 0
+          },
+          {
+            "evaluatorId": "Builtin.Helpfulness",
+            "statistics": {
+              "averageScore": 0.0
+            },
+            "totalEvaluated": 1,
+            "totalFailed": 0
+          },
+          {
+            "evaluatorId": "Builtin.Correctness",
+            "statistics": {
+              "averageScore": 0.0
+            },
+            "totalEvaluated": 1,
+            "totalFailed": 0
+          }
+        ]
+      },
+      "description": "Synthetic CloudOps fixtures; wrong-answer sanity only",
+      "updatedAt": "2026-09-18 06:29:35.026914+00:00",
+      "perSessionResults": [
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "bc33822c3bc04fa2b3f54f05aebc62ac",
+          "timeUnixNano": 1789704085152456000,
+          "observedTimeUnixNano": 1789712923422991243,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Faithfulness",
+            "session.id": "c99084b2-d4d3-48e4-8a2f-28351dbc8f9c",
+            "gen_ai.response.id": "bc33822c3bc04fa2b3f54f05aebc62ac",
+            "gen_ai.evaluation.score.value": 0.0,
+            "gen_ai.evaluation.explanation": "The tool output clearly shows: services EC2=$80, S3=$20, total=$100 USD. The assistant's response claims the total cost was USD 9999 and that S3 was the largest service at USD 9000. Both of these figures directly contradict the tool output. The actual total should be $100 (EC2 $80 + S3 $20), and EC2 was the most expensive service at $80, not S3. The assistant's response conflicts with the conversation history on every factual point.",
+            "gen_ai.evaluation.score.label": "Not At All",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_sanity_20260918_verified-aabfbcd479",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_sanity_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_sanity_20260918_verified-aabfbcd479",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Faithfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_sanity_20260918_verified-aabfbcd479",
+          "runId": "cloudops_sanity_20260918_verified-aabfbcd479",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Not At All",
+          "_aws": {
+            "Timestamp": 1789704085152,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Faithfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Faithfulness": 0.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "bc33822c3bc04fa2b3f54f05aebc62ac",
+          "timeUnixNano": 1789704085152456000,
+          "observedTimeUnixNano": 1789712923423084206,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Correctness",
+            "session.id": "c99084b2-d4d3-48e4-8a2f-28351dbc8f9c",
+            "gen_ai.response.id": "bc33822c3bc04fa2b3f54f05aebc62ac",
+            "gen_ai.evaluation.score.value": 0.0,
+            "gen_ai.evaluation.explanation": "The agent response states the total cost was USD 9999 and S3 was the largest service at USD 9000. The expected response states the total cost was USD 100, EC2 was the largest service at USD 80, and S3 was USD 20. The agent's figures are completely wrong: the total cost is off (9999 vs 100), the largest service is wrong (S3 vs EC2), and the amounts are incorrect. These are critical factual errors that directly contradict the expected response.",
+            "gen_ai.evaluation.score.label": "Incorrect",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_sanity_20260918_verified-aabfbcd479",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_sanity_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_sanity_20260918_verified-aabfbcd479",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Correctness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_sanity_20260918_verified-aabfbcd479",
+          "runId": "cloudops_sanity_20260918_verified-aabfbcd479",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Incorrect",
+          "_aws": {
+            "Timestamp": 1789704085152,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Correctness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Correctness": 0.0
+        },
+        {
+          "resource": {
+            "attributes": {
+              "aws.service.type": "gen_ai_agent",
+              "aws.local.service": "unknown",
+              "service.name": "cloudops_fixture_evaluation"
+            }
+          },
+          "traceId": "bc33822c3bc04fa2b3f54f05aebc62ac",
+          "timeUnixNano": 1789704085152456000,
+          "observedTimeUnixNano": 1789712923423098958,
+          "severityNumber": 9,
+          "name": "gen_ai.evaluation.result",
+          "attributes": {
+            "gen_ai.evaluation.name": "Builtin.Helpfulness",
+            "session.id": "c99084b2-d4d3-48e4-8a2f-28351dbc8f9c",
+            "gen_ai.response.id": "bc33822c3bc04fa2b3f54f05aebc62ac",
+            "gen_ai.evaluation.score.value": 0.0,
+            "gen_ai.evaluation.explanation": "The tool returned data showing: EC2 = $80, S3 = $20, total = $100, with EC2 being the most expensive service. However, the assistant's response completely contradicts this data by stating 'The total cost was USD 9999 and S3 was the largest service at USD 9000.' This is entirely fabricated and wrong on both counts - the total is wrong ($9999 vs $100) and the largest service is wrong (S3 vs EC2). The instructions explicitly state that tool output ALWAYS takes priority. The assistant ignored the tool output entirely and provided false information that would mislead the user. This actively obstructs the user's goal of understanding their billing costs, as they would walk away with completely incorrect information about both their total spend and which service cost the most.",
+            "gen_ai.evaluation.score.label": "Not Helpful At All",
+            "aws.bedrock_agentcore.evaluation_job.arn": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_sanity_20260918_verified-aabfbcd479",
+            "aws.bedrock_agentcore.evaluation_job.name": "cloudops_sanity_20260918_verified",
+            "aws.bedrock_agentcore.evaluation_job.run_id": "cloudops_sanity_20260918_verified-aabfbcd479",
+            "aws.bedrock_agentcore.evaluator.arn": "arn:aws:bedrock-agentcore:::evaluator/Builtin.Helpfulness",
+            "aws.bedrock_agentcore.evaluator.rating_scale": "Numerical",
+            "aws.bedrock_agentcore.evaluation_level": "Trace"
+          },
+          "evaluationJobId": "arn:aws:bedrock-agentcore:us-east-1:ACCOUNT_ID:batch-evaluate/cloudops_sanity_20260918_verified-aabfbcd479",
+          "runId": "cloudops_sanity_20260918_verified-aabfbcd479",
+          "service.name": "cloudops_fixture_evaluation",
+          "label": "Not Helpful At All",
+          "_aws": {
+            "Timestamp": 1789704085152,
+            "CloudWatchMetrics": [
+              {
+                "Namespace": "Bedrock-AgentCore/Evaluations",
+                "Dimensions": [
+                  [
+                    "service.name"
+                  ],
+                  [
+                    "label",
+                    "service.name"
+                  ],
+                  [
+                    "service.name",
+                    "evaluationJobId"
+                  ],
+                  [
+                    "label",
+                    "service.name",
+                    "evaluationJobId"
+                  ]
+                ],
+                "Metrics": [
+                  {
+                    "Name": "Builtin.Helpfulness",
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          },
+          "Builtin.Helpfulness": 0.0
+        }
+      ]
+    }
+  ],
+  "redactions": "AWS account IDs in service-returned ARNs replaced with ACCOUNT_ID. No scores, explanations or correlation IDs changed."
+}

@@ -157,6 +157,65 @@ The UI renders the **final JSON result**, not token-by-token model output. **Sto
 
 The four upstream MCP images use a tested source SHA and compatible dependency majors in [`codebuild-scripts/mcp-source.conf`](codebuild-scripts/mcp-source.conf). Before changing that pin or the transport patches, run `bash scripts/test-mcp-patches.sh` with Docker and network access. It exercises real Linux patch/startup/HTTP discovery without AWS credentials; it is not a deployment test.
 
+## Evaluations
+
+The [opt-in evaluation workflow](evaluations/README.md) runs this sample's Strands
+agent and shared system prompt against [12 versioned synthetic cases](evaluations/dataset.json),
+then calls the real AgentCore Evaluations service. Fixed tool fixtures make the
+reference answers independent of each user's AWS account. Supply your own profile,
+supported Region and model; production telemetry remains metadata-only.
+
+Measured on **2026-09-18** in the owner's `aiops_demo` account, `us-east-1`, using
+`us.anthropic.claude-sonnet-4-5-20250929-v1:0`, temperature 0, Strands 1.20.0,
+dataset 1.0.0. Capture and scoring ran from clean commit `bae50fe` after verifying
+the profile's account identity. [Sanitized evidence](evaluations/evidence/baseline-2026-09-18.json)
+contains hashes, configuration, evaluator metadata, session/trace mappings, agent
+responses, tool content, token usage and actual Evaluate result bodies.
+
+| Metric | Returned scale | Evaluated / expected | Mean | Label distribution |
+| --- | --- | --- | --- | --- |
+| Helpfulness | 0–1 | 12 / 12 | 0.9292 | Above And Beyond: 7; Very Helpful: 5 |
+| Faithfulness | 0–1 | 12 / 12 | 0.9583 | Completely Yes: 10; Generally Yes: 2 |
+| Correctness with ground truth | 0–1 | 12 / 12 | 0.9167 | Correct: 11; Incorrect: 1 |
+
+Each mean is the arithmetic mean of returned case scores, without rescaling or
+combining metrics. **12 completed, 0 failed, 0 skipped** for each metric; a low score
+is a completed evaluation, not an execution failure. No pass-rate rule is defined.
+Helpfulness metadata advertises a 0–6 rubric, but actual Evaluate values are normalized
+to 0–1; both are retained in the artifact. The separate deliberately wrong-answer
+sanity case scored **0 on all three metrics** and is excluded above.
+
+Representative failures: missing cost data prompted speculative explanations;
+an empty ALARM query led to unsupported claims about other alarm states (both
+Faithfulness 0.75). The empty inventory answer omitted the all-account/Region scope
+caveat (Correctness 0). These scores
+do not prove deployed Gateway/IAM enforcement or live AWS factual accuracy. The
+benchmark uses simplified fixture tools, and live verification covered two accounts
+in one Region—not all account policies, models or Regions. This demo-account baseline
+replaces an earlier run that incorrectly used the maintainer's `prod` profile.
+Built-in judges can vary. Direct on-demand calls do not create console batch jobs;
+use the new [batch workflow](evaluations/README.md#console-visible-batch-evaluations)
+to publish only approved synthetic spans and create console-visible jobs.
+
+**Console verification:** `cloudops_baseline_20260918_verified` and
+`cloudops_sanity_20260918_verified` both show **Success** in the demo account's
+`us-east-1` Batch evaluation tab. The batch baseline completed 12/12 sessions,
+with service-reported means of Helpfulness **0.96**, Faithfulness **0.96**, and
+Correctness **0.92** (rounded by the batch API). Sanity completed 1/1 with all
+scores zero. These are separate judge calls from the on-demand table above.
+[Batch evidence](evaluations/evidence/console-batch-2026-09-18.json) includes all
+36 baseline and three sanity result events. Four earlier failed jobs remain
+visible: they started before Logs Insights could see the input spans. The runner
+now polls Logs Insights, not merely log ingestion, before starting jobs.
+
+![Completed baseline and sanity batch jobs; account header cropped](evaluations/evidence/console-batch-completed.png)
+
+See the [runbook](evaluations/README.md) for pinned `uv` installation, invocation,
+local telemetry flush, scoring, replay, IAM/model prerequisites, cost and retention.
+The [generated report](evaluations/evidence/baseline-2026-09-18.md) keeps the baseline
+and sanity results separate. Paid commands require `--allow-paid`; ordinary tests
+never run evaluations.
+
 ## Verification and troubleshooting
 
 Record your revision, Region, model, prerequisites and results. The [merged implementation evidence in PR #25](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/pull/25) covers real browser queries, policy/identity checks, history and console traces; it does **not** establish a fresh-account deploy-and-destroy walkthrough for this documentation revision.
@@ -181,7 +240,7 @@ For a broken sidebar, check `conversationApi.endpoint` first. For a failed build
 - `tools/list` is filtered, but **semantic search may expose names of tools a role cannot invoke**. Invocation is separately enforced. The historical test-contract discussion is [#17](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/17); a closed issue does not change this implementation trade-off.
 - Operational tool roles are scoped to reads/query operations, not remediation. CloudTrail supports event/trail inspection—not trail management. Read permissions can still reveal sensitive account data; review wildcard resources, tenant boundaries and the actual [IAM policies](cdk/lib/mcp-runtime-stack.ts).
 - Treat model output and tool data as untrusted. Validate answers, avoid secrets in prompts, and perform a security review before expanding privileges or connecting additional tenants/accounts.
-- Do not enable default payload-bearing vended `APPLICATION_LOGS` or add an unfiltered exporter. Runtime payloads contain access tokens. Model-token **counts** are preserved; prompts, tool content and exception details are not exported by the app. Shared trace access/retention remains your responsibility; content-dependent evaluations are intentionally unsupported.
+- Do not enable default payload-bearing vended `APPLICATION_LOGS` or add an unfiltered exporter. Runtime payloads contain access tokens. Model-token **counts** are preserved; prompts, tool content and exception details are not exported by the app. Shared trace access/retention remains your responsibility. Production traces cannot support content-dependent evaluations; use only the isolated [synthetic evaluation path](evaluations/README.md).
 - [#18](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/18) (denial-message classification), [#19](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/19) (first-chat history persistence), and [#20](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/20) (setup validation of the history endpoint) are fixed. A successful final answer is still not proof that every intermediate tool call or history save succeeded; validate telemetry when it matters.
 
 ## Cleanup

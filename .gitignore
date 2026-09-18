@@ -25,6 +25,7 @@ __pycache__/
 venv/
 .pytest_cache/
 .hypothesis/
+evaluations/runs/
 
 # CDK
 cdk.context.json
