@@ -167,6 +167,20 @@
   margin-top: var(--space-1);
 }
 
+.hint {
+  color: #64748b;
+  font-size: var(--font-size-meta);
+  margin: var(--space-1) 0 0;
+  line-height: 1.4;
+}
+
+.hint code {
+  background: #f1f5f9;
+  border-radius: 4px;
+  padding: 1px 4px;
+  font-size: 0.9em;
+}
+
 .closeBtn {
   position: absolute;
   top: var(--space-2);

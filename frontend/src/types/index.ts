@@ -14,6 +14,11 @@ export interface ChatState {
   isLoading: boolean;
   progressMessage: string | null;
   error: { message: string; originalPrompt: string } | null;
+  // Non-blocking notice shown when persisting a message to conversation history
+  // fails. Distinct from `error` (which is a hard send failure with retry), so
+  // a save failure is surfaced without implying the exchange was stored
+  // (issue #19).
+  saveError: string | null;
 }
 
 // Chat context actions
@@ -23,6 +28,7 @@ export type ChatAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_PROGRESS'; payload: string | null }
   | { type: 'SET_ERROR'; payload: { message: string; originalPrompt: string } | null }
+  | { type: 'SET_SAVE_ERROR'; payload: string | null }
   | { type: 'CLEAR_MESSAGES' }
   | { type: 'RETRY_MESSAGE'; payload: { originalPrompt: string } }
   | { type: 'SET_MESSAGES'; payload: Message[] };
