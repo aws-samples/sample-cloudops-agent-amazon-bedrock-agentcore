@@ -1,0 +1,104 @@
+{
+  "version": "1.0.0",
+  "mode": "synthetic-fixtures",
+  "clock": "2026-09-01 (Tuesday) 12:00 UTC",
+  "review": "References independently worked from the committed synthetic fixtures; not assertions about real AWS prices, accounts, or lifecycle dates. Maintainer approved fixture-backed benchmark scope; reference text remains subject to maintainer review.",
+  "cases": [
+    {
+      "id": "cost-total", "domain": "billing", "role": "NonAdmin",
+      "preconditions": "Synthetic September 1 daily unblended USD cost; no taxes or credits.",
+      "prompts": ["What was our total unblended cost for September 1, 2026, and which service cost most?"],
+      "fixture": {"period": "2026-09-01/2026-09-02 exclusive", "unit": "USD", "services": {"EC2": 80, "S3": 20}},
+      "expectedResponse": "September 1 unblended cost was USD 100. EC2 was the largest service at USD 80, versus S3 at USD 20.",
+      "evidence": "Fixture service amounts: 80 + 20 = 100; 80 > 20."
+    },
+    {
+      "id": "cost-empty", "domain": "billing", "role": "NonAdmin",
+      "preconditions": "Successful query, empty cost result; not a verified zero charge.",
+      "prompts": ["How much did we spend on September 1, 2026?"],
+      "fixture": {"period": "2026-09-01/2026-09-02 exclusive", "results": [], "status": "success", "note": "No cost data available for this interval; zero spend is not established."},
+      "expectedResponse": "No cost data was returned for September 1, 2026. This does not establish zero spend.",
+      "evidence": "Empty results and explicit fixture availability note."
+    },
+    {
+      "id": "pricing-hours", "domain": "pricing", "role": "NonAdmin",
+      "preconditions": "Synthetic quoted rate, not an AWS list price; excludes storage, network and tax.",
+      "prompts": ["Using the demo quote, what does 10 hours of demo.small Linux shared compute cost? Exclude extras."],
+      "fixture": {"serviceCode": "AmazonEC2", "instanceType": "demo.small", "operatingSystem": "Linux", "tenancy": "Shared", "hourlyUSD": 0.12, "hours": 10, "synthetic": true},
+      "expectedResponse": "The synthetic compute-only quote is USD 1.20 for 10 hours at USD 0.12 per hour, excluding extras. It is not a real AWS list price.",
+      "evidence": "0.12 * 10 = 1.20; fixture marked synthetic."
+    },
+    {
+      "id": "alarms-count", "domain": "cloudwatch", "role": "Admin",
+      "preconditions": "Complete demo snapshot at fixed benchmark clock.",
+      "prompts": ["Summarize the alarm states. Which alarm needs attention?"],
+      "fixture": {"alarms": [{"name": "demo-cpu", "state": "ALARM"}, {"name": "demo-disk", "state": "OK"}, {"name": "demo-queue", "state": "INSUFFICIENT_DATA"}]},
+      "expectedResponse": "Three alarms: one ALARM (demo-cpu), one OK (demo-disk), and one INSUFFICIENT_DATA (demo-queue). Investigate demo-cpu and the missing data for demo-queue.",
+      "evidence": "Count each of the three distinct fixture states once."
+    },
+    {
+      "id": "alarms-empty", "domain": "cloudwatch", "role": "Admin",
+      "preconditions": "Successful complete query of ALARM-state alarms only.",
+      "prompts": ["Are any alarms currently in ALARM state?"],
+      "fixture": {"stateFilter": "ALARM", "alarms": [], "complete": true},
+      "expectedResponse": "No alarms are in ALARM state in the queried scope. This alone does not prove every resource is healthy.",
+      "evidence": "Complete empty filtered list; not a complete resource-health assessment."
+    },
+    {
+      "id": "alarms-followup", "domain": "cloudwatch", "role": "Admin",
+      "preconditions": "Two turns in one session, unchanged synthetic snapshot.",
+      "prompts": ["List the demo alarms in ALARM state.", "Which one has been alarming longer, and by how many minutes?"],
+      "fixture": {"snapshot": "2026-09-01T12:00:00Z", "alarms": [{"name": "demo-cpu", "state": "ALARM", "since": "2026-09-01T11:30:00Z"}, {"name": "demo-latency", "state": "ALARM", "since": "2026-09-01T11:50:00Z"}]},
+      "expectedResponse": "demo-cpu has been alarming longer: 30 minutes versus 10 minutes for demo-latency, a difference of 20 minutes at the snapshot time.",
+      "evidence": "12:00 minus 11:30 = 30 minutes; minus 11:50 = 10; difference = 20. Only the second trace is graded."
+    },
+    {
+      "id": "trail-actor", "domain": "cloudtrail", "role": "Admin",
+      "preconditions": "One independently supplied synthetic event in fixed UTC interval.",
+      "prompts": ["Who stopped demo-instance between 10:00 and 11:00 UTC on September 1, 2026?"],
+      "fixture": {"windowUTC": "2026-09-01T10:00:00Z/2026-09-01T11:00:00Z", "events": [{"eventName": "StopInstances", "actor": "demo-operator", "resource": "demo-instance", "time": "2026-09-01T10:15:00Z"}]},
+      "expectedResponse": "demo-operator issued StopInstances for demo-instance at 10:15 UTC on September 1, 2026.",
+      "evidence": "Actor, event, resource and timestamp taken directly from the supplied fixture event."
+    },
+    {
+      "id": "trail-empty", "domain": "cloudtrail", "role": "Admin",
+      "preconditions": "No matching lookup events; limited window, not proof no changes occurred.",
+      "prompts": ["Were there DeleteTrail events between 10:00 and 11:00 UTC on September 1, 2026?"],
+      "fixture": {"eventName": "DeleteTrail", "windowUTC": "2026-09-01T10:00:00Z/2026-09-01T11:00:00Z", "events": []},
+      "expectedResponse": "No DeleteTrail events were returned for the specified one-hour window. This is limited to the queried scope and is not proof no changes happened elsewhere.",
+      "evidence": "Empty lookup scoped to event name and one-hour interval."
+    },
+    {
+      "id": "trail-unavailable", "domain": "cloudtrail", "role": "Admin",
+      "preconditions": "Fixture tool reports unavailable data; no underlying events exposed.",
+      "prompts": ["Who changed demo-bucket today?"],
+      "fixture": {"status": "unavailable", "reason": "Demo CloudTrail lookup temporarily unavailable; no event data retrieved."},
+      "expectedResponse": "The CloudTrail lookup is unavailable, so who changed demo-bucket cannot be determined. Retry or inspect the audit logs when access is restored; do not invent an actor.",
+      "evidence": "Unavailable fixture contains no event or actor."
+    },
+    {
+      "id": "inventory-eol", "domain": "inventory", "role": "Admin",
+      "preconditions": "Synthetic lifecycle dates for a demo engine, not vendor lifecycle guidance.",
+      "prompts": ["As of September 1, 2026, which demo cluster is past standard support? Is extended support still available?"],
+      "fixture": {"synthetic": true, "clusters": [{"name": "demo-old", "engine": "demo-engine", "standardSupportEnd": "2026-08-31", "extendedSupportEnd": "2027-08-31"}, {"name": "demo-new", "engine": "demo-engine", "standardSupportEnd": "2027-08-31", "extendedSupportEnd": "2028-08-31"}]},
+      "expectedResponse": "demo-old is past standard support as of September 1, 2026, but its synthetic extended-support period lasts until August 31, 2027. demo-new remains in standard support. These are demo dates, not real vendor guidance.",
+      "evidence": "Compare fixed clock date against each fixture standard/extended end date."
+    },
+    {
+      "id": "inventory-empty", "domain": "inventory", "role": "Admin",
+      "preconditions": "Complete successful inventory for EKS in demo scope only.",
+      "prompts": ["List EKS clusters in the demo inventory scope."],
+      "fixture": {"service": "EKS", "scope": "demo", "clusters": [], "complete": true},
+      "expectedResponse": "No EKS clusters were found in the demo inventory scope. This does not establish that all accounts and Regions are empty.",
+      "evidence": "Complete empty list scoped to demo EKS inventory."
+    },
+    {
+      "id": "inventory-denied", "domain": "inventory", "role": "NonAdmin",
+      "preconditions": "Synthetic tool denial, not a test of actual Cognito/Cedar enforcement.",
+      "prompts": ["List all clusters and versions."],
+      "fixture": {"status": "denied", "reason": "NonAdmin may access billing and pricing only. Inventory requires Admin. No inventory returned."},
+      "expectedResponse": "Inventory access is denied for NonAdmin. An Admin can retrieve cluster information; no cluster names or versions can be reported from this request.",
+      "evidence": "Explicit denial contains no operational inventory."
+    }
+  ]
+}
