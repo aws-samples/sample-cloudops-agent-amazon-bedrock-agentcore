@@ -218,16 +218,29 @@ never run evaluations.
 
 ## Verification and troubleshooting
 
-Record your revision, Region, model, prerequisites and results. The [merged implementation evidence in PR #25](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/pull/25) covers real browser queries, policy/identity checks, history and console traces; it does **not** establish a fresh-account deploy-and-destroy walkthrough for this documentation revision.
+A healthy CloudFormation stack is not proof the app works. After deploying, run this quick smoke check:
 
-- [ ] Sign-in succeeds; all settings, including history, are configured.
-- [ ] **New Conversation** → allowed query → real answer → reload → reopen restores both messages.
-- [ ] Non-admin billing/pricing works; direct operational calls are denied without operational data.
-- [ ] **CloudWatch → GenAI Observability → Bedrock AgentCore → All sessions** shows the new session. Open its trace: require model/tool spans and nonzero model-token counts, not merely a `READY` runtime or an empty log stream.
-- [ ] Session totals match the sum of model **CLIENT** usage spans; do not double-count Strands aggregate spans. Tool-only requests can correctly have zero model tokens. Old zero-count traces are not backfilled.
-- [ ] No test access token or private prompt/tool marker appears in fresh telemetry. The [export regression](agentcore/tests/test_observability.py) also tests exception-text exclusion.
+- [ ] Sign-in succeeds and the app is configured (login-first if you baked config with `make frontend`, otherwise the settings you entered).
+- [ ] Send a message, wait for the answer, then reload and reopen the conversation from the sidebar — both your question and the answer return.
+- [ ] A non-admin user's cost/pricing question works, while operational CloudWatch/CloudTrail/Inventory calls are denied with a role-appropriate message (no operational data).
 
-For a broken sidebar, check `conversationApi.endpoint` first. For a failed build, inspect CodeBuild phases and the pinned source. For absent traces, check Transaction Search, the deployment's trace deliveries, the time range and a fresh conversation. OAuth fetch spans may have separate trace IDs even when workload-Identity operations share the request trace. See [security boundaries and telemetry limits](ARCHITECTURE.md#trust-boundaries).
+Record the revision, Region, model and results you test so runs are reproducible. (The [evidence in PR #25](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/pull/25) covers real browser queries, policy/identity, history and console traces; a fresh-account deploy-and-destroy walkthrough is not part of it.)
+
+### Verifying telemetry (advanced)
+
+To confirm the metadata-only observability behavior:
+
+- [ ] **CloudWatch → GenAI Observability → Bedrock AgentCore → All sessions** shows the new session, and its trace has model/tool spans with nonzero model-token counts — not merely a `READY` runtime or an empty log stream.
+- [ ] Session token totals equal the sum of the model **CLIENT** usage spans (don't double-count Strands' aggregate span; tool-only turns can legitimately show zero model tokens; old zero-count traces are not backfilled).
+- [ ] No access token or private prompt/tool content appears in fresh telemetry. The [export regression](agentcore/tests/test_observability.py) also checks exception-text exclusion.
+
+### Troubleshooting
+
+- **Broken sidebar** → check `conversationApi.endpoint` first.
+- **Failed image build** → inspect the CodeBuild phase logs and the pinned upstream source ([`codebuild-scripts/mcp-source.conf`](codebuild-scripts/mcp-source.conf)).
+- **Absent traces** → check Transaction Search, the deployment's trace deliveries, the time range, and try a fresh conversation. OAuth fetch spans may have separate trace IDs even when workload-identity operations share the request trace.
+
+See [security boundaries and telemetry limits](ARCHITECTURE.md#trust-boundaries).
 
 ## Security & limitations
 
