@@ -117,6 +117,44 @@ tables. Compare native scores, evaluator metadata, model, prompt hash, dataset h
 lock hash and run date; AWS manages built-in judge prompts/models, so source pinning
 does not pin their behavior. A service score is evidence, not a deterministic test.
 
+To regenerate the committed baseline table without AWS access:
+
+```bash
+uv run --directory evaluations --locked runner.py report \
+  --input evidence/baseline-2026-09-18.json --output runs/baseline-report.md
+```
+
+To re-score that same sanitized artifact, use it as `score --input` with your own
+profile/Region and a fresh output path. The service receives only its captured spans
+and the dataset references; prior scores do not enter judge inputs.
+
+## Verification evidence
+
+The [baseline artifact](evidence/baseline-2026-09-18.json) was captured from clean
+commit `8f75744` and re-scored from clean commit `6ef575c` on 2026-09-18 in
+`us-east-1`. Both invocations used a maintainer account; no second-account live run
+was performed. A fresh clone successfully ran locked dependency installation,
+offline checks, full capture, 39-call scoring, a second 39-call replay without agent
+invocation, and report regeneration. All 12 cases and the separate sanity case
+completed each metric with no missing results. The shared prompt was compared
+byte-for-byte with the pre-change prompt at the same clock value.
+
+Local checks: evaluation suite 8 passed and mypy clean; agent suite 107 passed,
+7 live-config skips and 14 live tests deselected; CDK 15 passed and TypeScript build
+clean; frontend 41 passed and production build clean (existing bundle-size warning);
+Lambda suites 20 passed; deployed-source inventory suite 6 passed; standalone inventory
+2 passed; standalone EOL scraper 70 passed. Inventory tests emit existing `utcnow`
+deprecation warnings. The agent suite includes the metadata-only OTLP export regression.
+No deployment, destructive outage test, Docker/MCP rebuild, or live Gateway security
+test was performed for this change.
+
+Review: standards and issue #24 were checked separately against `fd57ec7` (single
+reviewer; parallel subagents were unavailable). Live evidence caught two issues,
+now regression-tested: normalized Helpfulness values despite a 0–6 metadata rubric,
+and cumulative agent-span tokens on multi-turn sessions. No remaining code findings.
+Human approval of the newly authored reference wording remains a maintainer review
+step; the dataset records fixture evidence rather than claiming an external review.
+
 ## Cost, content safety and retention
 
 There are 13 agent turns (tool loops can make multiple model calls) and 39 judge
@@ -130,6 +168,11 @@ enforced. Model output is limited to 1,024 tokens per inference, not per full to
 Results retain judge `tokenUsage`; traces record agent usage without double-counting
 child spans. The sanity trace reuses agent tokens and must not be charged twice in
 your own summaries.
+
+The published re-score used **40,616 input + 8,953 output judge tokens** (49,569
+total), approximately **$0.205** at those rates, plus the original agent inference
+of **70,568 input + 4,029 output tokens**. These are token-based estimates, not a
+billing statement; development/smoke runs and the first scoring are additional.
 
 The standalone runner never imports the production runtime, obtains a JWT, reads
 customer resources or enables raw HTTP logging. Only Strands span/event allowlists
