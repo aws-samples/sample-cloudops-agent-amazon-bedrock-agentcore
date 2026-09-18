@@ -346,7 +346,7 @@ def report_run(dataset, run):
             score = "n/a" if stats["mean"] is None else f"{stats['mean']:.4f}"
             lines.append(f"| {metric} | 0–1 | {stats['completed']} / {stats['expected']} | {stats['failed']} | {stats['skipped']} | {score} | {json.dumps(stats['labels'], sort_keys=True)} |")
         lines.append("")
-    return summary, "\n".join(lines) + "\n"
+    return summary, "\n".join(lines).rstrip() + "\n"
 
 
 def main():
