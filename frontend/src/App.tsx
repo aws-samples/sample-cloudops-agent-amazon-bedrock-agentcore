@@ -6,14 +6,12 @@ import { fetchAuthSession } from 'aws-amplify/auth';
 import { ChatProvider, useChatContext } from '@/state/ChatContext';
 import { ConversationProvider, useConversationContext } from '@/state/ConversationContext';
 import { useProgressState } from '@/hooks/useProgressState';
-import { getAppConfig, getAgentName, isConfigured } from '@/services/config';
+import { getAppConfig, getAgentName, loadRuntimeConfig } from '@/services/config';
 import { ChatLayout } from '@/components/ChatLayout/ChatLayout';
 import { ConfigEditor } from '@/components/ConfigEditor/ConfigEditor';
-import type { AgentCredentials } from '@/types';
+import type { AgentCredentials, AppConfig } from '@/types';
 
-// Configure Amplify with Cognito settings from localStorage appConfig (if available)
-if (isConfigured()) {
-  const config = getAppConfig();
+function configureAmplify(config: AppConfig) {
   Amplify.configure({
     Auth: {
       Cognito: {
@@ -25,11 +23,71 @@ if (isConfigured()) {
   });
 }
 
-function App() {
-  const [showConfig, setShowConfig] = useState(!isConfigured());
+/** Minimal full-screen notice used for the loading and deployment-error states. */
+function CenteredNotice({ title, body }: { title: string; body?: string }) {
+  return (
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '12px',
+        padding: '24px',
+        textAlign: 'center',
+        color: '#1e293b',
+      }}
+    >
+      <h2 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>{title}</h2>
+      {body && <p style={{ fontSize: '14px', color: '#64748b', margin: 0, maxWidth: '520px' }}>{body}</p>}
+    </div>
+  );
+}
 
+function App() {
+  // Onboarding is login-first when the deployment baked app-config.json into the
+  // bundle (issue #23). We resolve configuration once at startup; only the
+  // absence of any deployment config falls back to the local setup form.
+  const [status, setStatus] = useState<'loading' | 'ready' | 'needs-setup' | 'deploy-error'>('loading');
+  const [deployError, setDeployError] = useState<string>('');
+  const [showConfig, setShowConfig] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const result = await loadRuntimeConfig();
+      if (cancelled) return;
+      if (result.status === 'ready' && result.config) {
+        configureAmplify(result.config);
+        setStatus('ready');
+      } else if (result.status === 'deploy-error') {
+        setDeployError(result.error || 'The deployment configuration is invalid.');
+        setStatus('deploy-error');
+      } else {
+        setStatus('needs-setup');
+        setShowConfig(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (status === 'loading') {
+    return <CenteredNotice title="Loading…" />;
+  }
+
+  // Deployment config is present but broken: this is for the deployer to fix,
+  // not something an end user should be asked to repair in a setup form.
+  if (status === 'deploy-error') {
+    return <CenteredNotice title="Configuration error" body={deployError} />;
+  }
+
+  // Setup form: the local-development / custom-backend path (no deployment
+  // config present), or when a configured user explicitly opens Settings.
   if (showConfig) {
-    return <ConfigEditor onClose={isConfigured() ? () => setShowConfig(false) : undefined} />;
+    return <ConfigEditor onClose={status === 'ready' ? () => setShowConfig(false) : undefined} />;
   }
 
   return (
