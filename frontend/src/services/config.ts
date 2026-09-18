@@ -79,3 +79,111 @@ export function getConversationApiEndpoint(): string {
   }
   return config.conversationApi.endpoint;
 }
+
+// ---------------------------------------------------------------------------
+// Deployment-supplied configuration (issue #23: login-first hosted onboarding)
+// ---------------------------------------------------------------------------
+//
+// The hosted app is configured once at deployment time: a build step bakes the
+// stack's FrontEndConfig into `app-config.json` at the site root (see
+// scripts/generate-frontend-config.sh). When that file is present and valid the
+// app is authoritative-configured and goes straight to login — no setup screen,
+// and no per-browser configuration. The setup form (ConfigEditor) remains as an
+// opt-in path for local development or pointing at a custom backend, used only
+// when no deployment config is present. Published config contains only
+// non-secret values (pool IDs, ARN, API URL, Region) — never passwords, tokens,
+// or OAuth secrets.
+
+/** Path of the deployment-supplied config, relative to the app base URL. */
+const DEPLOYMENT_CONFIG_FILE = 'app-config.json';
+
+export interface ConfigLoadResult {
+  /**
+   * - `ready`: a usable config is available (deployment-supplied or local).
+   * - `needs-setup`: no config anywhere; show the setup form (dev/custom path).
+   * - `deploy-error`: deployment config is present but invalid — a deployment
+   *   problem to fix at the source, NOT something an end user should repair.
+   */
+  status: 'ready' | 'needs-setup' | 'deploy-error';
+  config?: AppConfig;
+  error?: string;
+}
+
+function hasRequiredConfigShape(parsed: unknown): parsed is AppConfig {
+  const c = parsed as AppConfig | undefined;
+  return Boolean(
+    c?.cognito?.userPoolId &&
+      c?.cognito?.userPoolClientId &&
+      c?.cognito?.identityPoolId &&
+      c?.conversationApi?.endpoint
+  );
+}
+
+type DeploymentConfigFetch =
+  | { present: false }
+  | { present: true; valid: true; config: AppConfig }
+  | { present: true; valid: false; error: string };
+
+async function fetchDeploymentConfig(): Promise<DeploymentConfigFetch> {
+  const base = (import.meta.env.BASE_URL as string | undefined) || '/';
+  const url = `${base}${DEPLOYMENT_CONFIG_FILE}`;
+  let res: Response;
+  try {
+    res = await fetch(url, { cache: 'no-store' });
+  } catch {
+    // Network/other error resolving the file — treat as "no deployment config"
+    // so local development falls through to the setup form.
+    return { present: false };
+  }
+  if (!res.ok) return { present: false };
+
+  const text = await res.text();
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    // Not JSON — almost certainly the SPA's index.html served by a catch-all
+    // rewrite when the file does not exist. Treat as absent (dev), not an error.
+    return { present: false };
+  }
+  if (!hasRequiredConfigShape(parsed)) {
+    return {
+      present: true,
+      valid: false,
+      error:
+        'The deployment configuration (app-config.json) is present but incomplete. ' +
+        'It must include the Cognito user/client/identity pool IDs and the ' +
+        'Conversation History API endpoint. This is a deployment configuration ' +
+        'problem — please contact whoever deployed this app.',
+    };
+  }
+  return { present: true, valid: true, config: parsed as AppConfig };
+}
+
+/**
+ * Resolve the effective app configuration at startup.
+ *
+ * Precedence: a valid deployment-supplied `app-config.json` wins and is
+ * persisted to `localStorage` so the existing synchronous {@link getAppConfig}
+ * consumers work unchanged and survive reloads / new browsers without a setup
+ * step. If no deployment config is present, fall back to `localStorage` (local
+ * dev / custom backend); if that is also absent, request the setup form.
+ */
+export async function loadRuntimeConfig(): Promise<ConfigLoadResult> {
+  const hosted = await fetchDeploymentConfig();
+  if (hosted.present) {
+    if (hosted.valid) {
+      try {
+        localStorage.setItem('appConfig', JSON.stringify(hosted.config));
+      } catch {
+        // Ignore storage failures; the returned in-memory config is still used.
+      }
+      return { status: 'ready', config: hosted.config };
+    }
+    return { status: 'deploy-error', error: hosted.error };
+  }
+  if (isConfigured()) {
+    return { status: 'ready', config: getAppConfig() };
+  }
+  return { status: 'needs-setup' };
+}

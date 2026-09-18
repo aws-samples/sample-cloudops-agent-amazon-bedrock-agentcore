@@ -119,7 +119,9 @@ make config     # Prints the deployment's FrontEndConfig and maps each value to 
 
 In **AWS Amplify Hosting**, create an app using **Deploy without Git** and upload `frontend/cloudops-frontend.zip`. Follow [Amplify's manual deployment guide](https://docs.aws.amazon.com/amplify/latest/userguide/manual-deploys.html). Open your app's URL after deployment succeeds. Do not publish your account's URL or configuration as demo evidence.
 
-The setup screen has **individual fields, not a JSON import**. Copy each value from `FrontEndConfig` into these controls:
+`make frontend` bakes the deployment's `FrontEndConfig` into the bundle (`app-config.json`), so opening the app URL takes users straight to **sign-in** — no per-browser setup, and clearing storage or using another browser still works ([#23](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/23)). The baked file holds only non-secret values (pool IDs, the runtime ARN, the API URL, and Regions). Skip to the sign-in step below.
+
+If you build **without** a deployed backend (a "bring your own backend" bundle) or run locally in development, the app shows a setup screen instead. It has **individual fields, not a JSON import** — copy each value from `make config` (the `FrontEndConfig` output) into these controls:
 
 | Output field | Setup control |
 | --- | --- |
@@ -132,7 +134,7 @@ The setup screen has **individual fields, not a JSON import**. Copy each value f
 | Optional display label, e.g. `CloudOps Agent` | AgentCore → Agent Name |
 | **`conversationApi.endpoint`** | **Conversation History API → API Endpoint URL** |
 
-Click **Save**; the page reloads. Settings are stored in this browser's `localStorage`, so another browser needs its own setup. The history endpoint currently looks optional but is required for the sidebar ([#20](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/20)).
+Click **Save**; the page reloads. Setup-form settings are stored in this browser's `localStorage`; the Conversation History API endpoint is required.
 
 ### 5. Sign in and send the first query
 
