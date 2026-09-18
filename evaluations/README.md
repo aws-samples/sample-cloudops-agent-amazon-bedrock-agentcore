@@ -9,7 +9,7 @@ the deployed MCP tools. Search returns the case's fixture tool. There is no live
 
 ## Metrics and references
 
-- `Builtin.Helpfulness` (0–6): usefulness to the user. Not proof of facts.
+- `Builtin.Helpfulness` (returned scores 0–1): usefulness to the user. Not proof of facts.
 - `Builtin.Faithfulness` (0–1): consistency with conversation and tool context.
 - `Builtin.Correctness` (0–1): agreement with the reviewed reference supplied as
   `evaluationReferenceInputs[].expectedResponse.text`, scoped to session **and trace**.
@@ -21,6 +21,11 @@ command. One explicit trace target per API call stays below the service's ten-re
 limit. The multi-turn case grades its final trace while retaining the first turn's
 context. Missing references, incomplete content, wrong targets and ignored reference
 fields are errors, never a fallback to reference-free Correctness.
+
+In the measured run, `GetEvaluator` advertised a 0–6 Helpfulness rubric, but
+`Evaluate` returned normalized scores (`0.83` = Very Helpful; `1.0` = Above And
+Beyond). We preserve and average the **returned** 0–1 scores without rescaling;
+the artifact retains the unmodified metadata, including its differing capitalization.
 
 [`dataset.json`](dataset.json) contains 12 stable case IDs across cost/pricing,
 CloudWatch, CloudTrail and inventory/EOL, including empty data, unavailable data,

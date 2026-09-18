@@ -115,7 +115,7 @@ def checked_result(record, metric):
     value = result.get("value")
     if not isinstance(value, (int, float)) or not math.isfinite(value) or not result.get("label"):
         raise ValueError("missing score or label")
-    if not 0 <= value <= (6 if metric == "Builtin.Helpfulness" else 1):
+    if not 0 <= value <= 1:
         raise ValueError("score outside native scale")
     return result
 
@@ -338,7 +338,7 @@ def report_run(dataset, run):
                   "| --- | --- | --- | --- | --- | --- | --- |"]
         for metric, stats in metrics.items():
             score = "n/a" if stats["mean"] is None else f"{stats['mean']:.4f}"
-            lines.append(f"| {metric} | {'0–6' if metric.endswith('Helpfulness') else '0–1'} | {stats['completed']} / {stats['expected']} | {stats['failed']} | {stats['skipped']} | {score} | {json.dumps(stats['labels'], sort_keys=True)} |")
+            lines.append(f"| {metric} | 0–1 | {stats['completed']} / {stats['expected']} | {stats['failed']} | {stats['skipped']} | {score} | {json.dumps(stats['labels'], sort_keys=True)} |")
         lines.append("")
     return summary, "\n".join(lines) + "\n"
 

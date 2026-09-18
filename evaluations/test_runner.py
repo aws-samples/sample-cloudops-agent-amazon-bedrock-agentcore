@@ -89,3 +89,15 @@ def test_report_does_not_accept_ignored_ground_truth_or_service_errors(field):
     assert stats["completed"] == 0
     assert stats["failed"] == 1
     assert stats["mean"] is None
+
+
+def test_report_uses_returned_normalized_helpfulness_not_metadata_rubric():
+    from runner import report_run
+    result = {"evaluatorId": "Builtin.Helpfulness", "value": 0.83, "label": "Very Helpful",
+              "context": {"spanContext": {"sessionId": "one", "traceId": "trace"}}}
+    run = {"datasetVersion": "test", "datasetSha256": "hash", "testedCommit": "commit", "sourceDirty": False,
+           "records": [{"id": "one", "sessionId": "one", "traceId": "trace",
+                        "results": {"Builtin.Helpfulness": {"evaluationResults": [result]}}}]}
+    summary, markdown = report_run({"cases": [{"id": "one"}]}, run)
+    assert summary["baseline"]["Builtin.Helpfulness"]["mean"] == 0.83
+    assert "| Builtin.Helpfulness | 0–1 |" in markdown
