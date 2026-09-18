@@ -77,6 +77,16 @@ def validate_content(spans, trace_id):
                 raise ValueError(f"incomplete {operation} content")
 
 
+def agent_token_usage(spans):
+    # invoke_agent usage is cumulative across turns in Strands 1.20. Count each
+    # actual chat/model call once instead of summing those cumulative totals.
+    return {
+        key: sum(s["attributes"].get(f"gen_ai.usage.{key}_tokens", 0) for s in spans
+                 if s["attributes"].get("gen_ai.operation.name") == "chat")
+        for key in ("input", "output", "total")
+    }
+
+
 def evaluation_request(case, record, metric):
     reference = case.get("expectedResponse")
     if not isinstance(reference, str) or not reference.strip():
@@ -268,12 +278,7 @@ def invoke_cases(args, dataset):
             record["traceId"] = agents[-1]["traceId"]
             record["turnTraceIds"] = [s["traceId"] for s in agents]
             record["response"] = str(result)
-            # Strands invoke_agent usage aggregates its child model calls. Count
-            # this once per turn, never add child/chat usage again.
-            record["agentTokenUsage"] = {
-                key: sum(s["attributes"].get(f"gen_ai.usage.{key}_tokens", 0) for s in agents)
-                for key in ("input", "output", "total")
-            }
+            record["agentTokenUsage"] = agent_token_usage(record["spans"])
             validate_content(record["spans"], record["traceId"])
             ensure_safe(record)
         except Exception as exc:
@@ -312,6 +317,7 @@ def score_cases(args, dataset, run):
             continue
         record["results"] = {}
         record.pop("evaluationErrors", None)
+        record["agentTokenUsage"] = agent_token_usage(record["spans"])
         for metric in METRICS:
             try:
                 ensure_safe(record["spans"])

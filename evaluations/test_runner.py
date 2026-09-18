@@ -101,3 +101,10 @@ def test_report_uses_returned_normalized_helpfulness_not_metadata_rubric():
     summary, markdown = report_run({"cases": [{"id": "one"}]}, run)
     assert summary["baseline"]["Builtin.Helpfulness"]["mean"] == 0.83
     assert "| Builtin.Helpfulness | 0–1 |" in markdown
+
+
+def test_token_aggregation_does_not_double_count_cumulative_multi_turn_usage():
+    from runner import agent_token_usage
+    spans = [{"attributes": {"gen_ai.operation.name": operation, "gen_ai.usage.input_tokens": count}}
+             for operation, count in [("chat", 10), ("invoke_agent", 10), ("chat", 5), ("invoke_agent", 15)]]
+    assert agent_token_usage(spans) == {"input": 15, "output": 0, "total": 0}
