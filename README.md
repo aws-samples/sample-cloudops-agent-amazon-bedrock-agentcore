@@ -139,10 +139,10 @@ Click **Save**; the page reloads. Setup-form settings are stored in this browser
 ### 5. Sign in and send the first query
 
 1. Sign in as **`admin`**, using the temporary password emailed to `COGNITO_ADMIN_EMAIL`. Change it when prompted. The bootstrap user belongs to the Cognito `Administrators` group.
-2. **Click New Conversation before sending.** The current first-send path otherwise fails to save history ([#19](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/19)).
+2. Send your first message straight away — the first send now creates a persisted conversation automatically, so the exchange survives a reload ([#19](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/19) fixed). Clicking **New Conversation** first is optional.
 3. Send: **“Use CloudWatch to check active alarms in this Region and summarize in one sentence.”** Include your chosen Region if different from the tool default. Expect an alarm summary or a valid empty result—not a permissions/configuration error.
 4. Wait for the final answer, then reload and reopen the conversation from the sidebar. Both your question and the answer should return.
-5. For the non-admin path, create a separate Cognito user outside `Administrators`. A pricing question is allowed; operational CloudWatch/CloudTrail/Inventory calls are denied. Exact friendly denial wording is not guaranteed ([#18](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/18)).
+5. For the non-admin path, create a separate Cognito user outside `Administrators`. A pricing question is allowed; operational CloudWatch/CloudTrail/Inventory calls are denied and return a role-appropriate "not available for your role" response rather than a generic error ([#18](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/18) fixed). The exact wording is not guaranteed, and it names no denied-tool data.
 
 The UI renders the **final JSON result**, not token-by-token model output. **Stop** cancels the browser's request; it does not guarantee cancellation of backend execution or charges.
 
@@ -182,7 +182,7 @@ For a broken sidebar, check `conversationApi.endpoint` first. For a failed build
 - Operational tool roles are scoped to reads/query operations, not remediation. CloudTrail supports event/trail inspection—not trail management. Read permissions can still reveal sensitive account data; review wildcard resources, tenant boundaries and the actual [IAM policies](cdk/lib/mcp-runtime-stack.ts).
 - Treat model output and tool data as untrusted. Validate answers, avoid secrets in prompts, and perform a security review before expanding privileges or connecting additional tenants/accounts.
 - Do not enable default payload-bearing vended `APPLICATION_LOGS` or add an unfiltered exporter. Runtime payloads contain access tokens. Model-token **counts** are preserved; prompts, tool content and exception details are not exported by the app. Shared trace access/retention remains your responsibility; content-dependent evaluations are intentionally unsupported.
-- [#18](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/18), [#19](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/19), and [#20](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/20) document current denial-message and history/setup limitations. A successful final answer is not proof that every intermediate tool call or history save succeeded.
+- [#18](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/18) (denial-message classification), [#19](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/19) (first-chat history persistence), and [#20](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/20) (setup validation of the history endpoint) are fixed. A successful final answer is still not proof that every intermediate tool call or history save succeeded; validate telemetry when it matters.
 
 ## Cleanup
 
