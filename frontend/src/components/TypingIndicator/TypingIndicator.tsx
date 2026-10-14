@@ -11,7 +11,7 @@ export function TypingIndicator({ progressMessage }: TypingIndicatorProps) {
       aria-label={ariaLabel}
     >
       <div className={styles.bubble}>
-        <span className={styles.workingText}>Working<span className={styles.ellipsis} /></span>
+        <span className={styles.workingText}>{ariaLabel}<span className={styles.ellipsis} /></span>
       </div>
     </div>
   );

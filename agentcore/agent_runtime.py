@@ -17,10 +17,12 @@ import base64
 import binascii
 import json
 import os
+import sys
 import boto3
 import logging
 from datetime import datetime, timezone
 from typing import Optional
+from streaming import stream_response
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -358,6 +360,9 @@ def invoke(payload, context=None):
     (a dedicated ``accessToken`` payload field or the runtime's inbound JWT
     context) and forwarded to the Gateway via a per-request Bearer MCP client.
     """
+    if payload.get("responseMode") == "stream-v1":
+        return stream_response(payload, context, runtime=sys.modules[__name__])
+
     user_message = payload.get("prompt", "")
     session_id = payload.get("sessionId", "default_session")
     user_id = payload.get("userId", "default_user")

@@ -1,0 +1,43 @@
+.tool-results-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 0.75rem 0;
+}
+.tool-results-scroll table {
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  width: 100%;
+  min-width: 30rem;
+}
+.tool-results-scroll th,
+.tool-results-scroll td {
+  padding: 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid #cbd5e1;
+  overflow-wrap: anywhere;
+  min-width: 5rem;
+  max-width: 16rem;
+}
+.tool-results-scroll thead th {
+  white-space: nowrap;
+}
+.tool-results-scroll caption {
+  text-align: left;
+  font-weight: 600;
+}
+.tool-cost-chart {
+  margin: 0.75rem 0;
+  max-width: 100%;
+}
+.tool-cost-row {
+  display: grid;
+  grid-template-columns: minmax(4rem, 1fr) minmax(0, 2fr) minmax(4rem, 1fr);
+  gap: 0.5rem;
+  align-items: center;
+  overflow-wrap: anywhere;
+}
+.tool-cost-bar {
+  height: 0.75rem;
+  background: #6366f1;
+  min-width: 1px;
+}

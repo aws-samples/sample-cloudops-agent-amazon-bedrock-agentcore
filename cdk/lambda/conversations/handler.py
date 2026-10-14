@@ -75,7 +75,7 @@ def handler(event, context):
     body = None
     if event.get('body'):
         try:
-            body = json.loads(event['body'])
+            body = json.loads(event['body'], parse_float=decimal.Decimal)
         except (json.JSONDecodeError, TypeError):
             body = {}
 
@@ -221,6 +221,12 @@ def update_conversation(user_id, conversation_id, body):
     # Handle messages append
     if body and 'messages' in body and isinstance(body['messages'], list):
         new_messages = body['messages']
+        # Optional v1 presentation snapshots are data, never generated components.
+        # Bound the full append, including all tools, before DynamoDB persistence.
+        if len(new_messages) > 10 or len(json.dumps(new_messages, cls=DecimalEncoder).encode('utf-8')) > 160_000:
+            return json_response(413, {'message': 'Message snapshot is too large'})
+        if any(not valid_message(message) for message in new_messages):
+            return json_response(400, {'message': 'Invalid message snapshot'})
         existing_messages = item.get('messages', [])
 
         # Auto-naming: if this is the first message being appended and current name
@@ -248,6 +254,8 @@ def update_conversation(user_id, conversation_id, body):
 
         # Append new messages to existing
         combined_messages = existing_messages + new_messages
+        if len(json.dumps(combined_messages, cls=DecimalEncoder).encode('utf-8')) > 340_000:
+            return json_response(413, {'message': 'Conversation history is full; start a new conversation'})
         update_expressions.append('messages = :messages')
         expression_attr_values[':messages'] = combined_messages
 
@@ -272,6 +280,8 @@ def update_conversation(user_id, conversation_id, body):
         'UpdateExpression': 'SET ' + ', '.join(update_expressions),
         'ExpressionAttributeValues': expression_attr_values,
         'ReturnValues': 'ALL_NEW',
+        # A late stream save must not recreate a concurrently deleted record.
+        'ConditionExpression': 'attribute_exists(userId) AND attribute_exists(conversationId)',
     }
     if expression_attr_names:
         update_kwargs['ExpressionAttributeNames'] = expression_attr_names
@@ -286,6 +296,55 @@ def update_conversation(user_id, conversation_id, body):
         'createdAt': updated_item.get('createdAt', ''),
         'updatedAt': updated_item.get('updatedAt', ''),
     })
+
+
+def valid_message(message):
+    """Validate optional presentation envelopes; legacy text-only history still works."""
+    if not isinstance(message, dict) or message.get('role') not in ('user', 'agent'):
+        return False
+    if not isinstance(message.get('content'), str) or len(message['content']) > 100_000:
+        return False
+    if 'tools' not in message:
+        return True
+    if message.get('partsVersion') != 1 or not isinstance(message['tools'], list) or len(message['tools']) > 50:
+        return False
+    if len(json.dumps(message['tools'], cls=DecimalEncoder).encode('utf-8')) > 64_000:
+        return False
+    for tool in message['tools']:
+        if not isinstance(tool, dict) or set(tool) - {'id', 'name', 'status', 'presentation'}:
+            return False
+        if not all(isinstance(tool.get(k), str) and len(tool[k]) <= 200 for k in ('id', 'name')):
+            return False
+        if tool.get('status') not in ('completed', 'failed', 'interrupted'):
+            return False
+        view = tool.get('presentation')
+        if view is None:
+            continue
+        if not isinstance(view, dict):
+            return False
+        if view.get('kind') == 'resources' and set(view) == {'kind', 'rows'}:
+            rows = view['rows']
+            fields = {'name', 'region', 'status', 'version', 'engine', 'instance_class'}
+            if not isinstance(rows, list) or not 1 <= len(rows) <= 50:
+                return False
+            if any(not isinstance(row, dict) or 'name' not in row or set(row) - fields
+                   or any(not isinstance(v, str) or len(v) > 200 for v in row.values()) for row in rows):
+                return False
+        elif view.get('kind') == 'costs' and set(view) == {'kind', 'unit', 'points'}:
+            points = view['points']
+            if view['unit'] not in ('USD', 'EUR', 'GBP', 'JPY') or not isinstance(points, list) or not 1 <= len(points) <= 50:
+                return False
+            for point in points:
+                if not isinstance(point, dict) or set(point) != {'label', 'value'}:
+                    return False
+                if not isinstance(point['label'], str) or len(point['label']) > 40:
+                    return False
+                value = point['value']
+                if isinstance(value, bool) or not isinstance(value, (int, float, decimal.Decimal)) or not decimal.Decimal(str(value)).is_finite():
+                    return False
+        else:
+            return False
+    return True
 
 
 def delete_conversation(user_id, conversation_id):

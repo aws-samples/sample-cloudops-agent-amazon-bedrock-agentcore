@@ -1,4 +1,5 @@
 .container {
+  min-width: 0;
   flex: 1;
   overflow-y: auto;
   padding: var(--space-3);
@@ -60,6 +61,7 @@
 }
 
 .agentMessage {
+  min-width: 0;
   max-width: 95%;
   padding: var(--space-2) var(--space-3);
   background: var(--color-agent-bubble);

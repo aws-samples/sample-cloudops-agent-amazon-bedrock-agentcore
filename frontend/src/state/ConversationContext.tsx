@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, useRef } from 'react';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import {
   ConversationState,
@@ -98,6 +98,8 @@ const ConversationContext = createContext<ConversationContextValue | undefined>(
 
 export function ConversationProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(conversationReducer, initialState);
+  const navigation = useRef(0);
+  const activeId = useRef<string | null>(null);
 
   const loadConversations = useCallback(async () => {
     dispatch({ type: 'SET_LOADING_LIST', payload: true });
@@ -115,6 +117,7 @@ export function ConversationProvider({ children }: { children: React.ReactNode }
   }, []);
 
   const createConversationFn = useCallback(async (): Promise<string> => {
+    const targetNavigation = ++navigation.current;
     try {
       const token = await getAuthToken();
       const created = await apiCreateConversation(token);
@@ -125,7 +128,10 @@ export function ConversationProvider({ children }: { children: React.ReactNode }
         updatedAt: created.updatedAt,
       };
       dispatch({ type: 'ADD_CONVERSATION', payload: metadata });
-      dispatch({ type: 'SET_ACTIVE', payload: created.conversationId });
+      if (navigation.current === targetNavigation) {
+        activeId.current = created.conversationId;
+        dispatch({ type: 'SET_ACTIVE', payload: created.conversationId });
+      }
       return created.conversationId;
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to create conversation';
@@ -135,19 +141,23 @@ export function ConversationProvider({ children }: { children: React.ReactNode }
   }, []);
 
   const switchConversation = useCallback(async (id: string): Promise<Message[]> => {
+    const targetNavigation = ++navigation.current;
     dispatch({ type: 'SET_LOADING_CONVERSATION', payload: true });
     dispatch({ type: 'SET_CONVERSATION_ERROR', payload: null });
     try {
       const token = await getAuthToken();
       const conversation = await getConversation(token, id);
-      dispatch({ type: 'SET_ACTIVE', payload: id });
+      if (navigation.current === targetNavigation) {
+        activeId.current = id;
+        dispatch({ type: 'SET_ACTIVE', payload: id });
+      }
       return conversation.messages;
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to load conversation';
-      dispatch({ type: 'SET_CONVERSATION_ERROR', payload: message });
+      if (navigation.current === targetNavigation) dispatch({ type: 'SET_CONVERSATION_ERROR', payload: message });
       throw error;
     } finally {
-      dispatch({ type: 'SET_LOADING_CONVERSATION', payload: false });
+      if (navigation.current === targetNavigation) dispatch({ type: 'SET_LOADING_CONVERSATION', payload: false });
     }
   }, []);
 
@@ -170,7 +180,8 @@ export function ConversationProvider({ children }: { children: React.ReactNode }
       dispatch({ type: 'REMOVE_CONVERSATION', payload: id });
 
       // If deleted conversation was active, create a new one
-      if (state.activeConversationId === id) {
+      if (activeId.current === id) {
+        const targetNavigation = ++navigation.current;
         const newToken = await getAuthToken();
         const created = await apiCreateConversation(newToken);
         const metadata: ConversationMetadata = {
@@ -180,6 +191,8 @@ export function ConversationProvider({ children }: { children: React.ReactNode }
           updatedAt: created.updatedAt,
         };
         dispatch({ type: 'ADD_CONVERSATION', payload: metadata });
+        if (navigation.current !== targetNavigation) return null;
+        activeId.current = created.conversationId;
         dispatch({ type: 'SET_ACTIVE', payload: created.conversationId });
         // Return the replacement id so the caller can resync the chat view
         // (clear stale messages + retarget the chat session). Without this the
@@ -194,7 +207,7 @@ export function ConversationProvider({ children }: { children: React.ReactNode }
       dispatch({ type: 'SET_CONVERSATION_ERROR', payload: message });
       throw error;
     }
-  }, [state.activeConversationId]);
+  }, []);
 
   const saveMessages = useCallback(async (messages: Message[]): Promise<void> => {
     if (!state.activeConversationId) return;
