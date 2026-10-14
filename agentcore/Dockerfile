@@ -31,6 +31,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
 COPY agent_runtime.py .
+COPY streaming.py .
 COPY system_prompt.py .
 COPY observability.py .
 COPY streamable_http_sigv4.py .

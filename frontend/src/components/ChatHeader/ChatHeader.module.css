@@ -150,3 +150,13 @@
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
+
+@media (max-width: 600px) {
+  .header { height: auto; min-height: var(--header-height); padding: 8px 12px; flex-wrap: wrap; gap: 8px; }
+  .left { flex: 1 1 100%; min-width: 0; gap: 8px; }
+  .agentName { font-size: 18px; overflow-wrap: anywhere; }
+  .right { width: 100%; flex-wrap: wrap; gap: 8px; }
+  .avatarGroup { margin-left: auto; max-width: 90px; }
+  .avatarName { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .newConversation, .logoutBtn { white-space: nowrap; }
+}

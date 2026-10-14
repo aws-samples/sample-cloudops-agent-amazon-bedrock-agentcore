@@ -1,10 +1,13 @@
 // Message types
+import type { ToolPart } from '@/services/streamEvents';
 export interface Message {
   id: string;
   role: 'user' | 'agent';
   content: string;
   timestamp: number;
-  status: 'sent' | 'delivered' | 'error';
+  status: 'sent' | 'delivered' | 'error' | 'streaming' | 'interrupted';
+  partsVersion?: 1;
+  tools?: ToolPart[];
   errorMessage?: string;
 }
 

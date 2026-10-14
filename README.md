@@ -148,6 +148,9 @@ The UI renders the **final JSON result**, not token-by-token model output. **Sto
 
 ## Extend this sample
 
+For the chat's opt-in streaming protocol, bounded resource/cost previews,
+history compatibility, and offline tests, see [Chat streaming](docs/chat-streaming.md).
+
 | What to reuse | Where to start | What to change and verify |
 | --- | --- | --- |
 | A configurable Bedrock agent | [`cdk/bin/app.ts`](cdk/bin/app.ts), [`agentcore/agent_runtime.py`](agentcore/agent_runtime.py) | Set `BEDROCK_MODEL_ID` before synthesis. Verify Region/model access, the synthesized IAM resources, a real query and model usage spans. |

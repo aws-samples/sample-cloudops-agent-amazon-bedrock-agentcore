@@ -12,6 +12,7 @@
     "zip": "npm run build && cd dist && zip -r ../cloudops-frontend.zip ."
   },
   "dependencies": {
+    "@assistant-ui/react": "0.15.28",
     "@aws-amplify/ui-react": "^6.0.0",
     "@aws-crypto/sha256-js": "^5.2.0",
     "@aws-sdk/credential-providers": "^3.0.0",

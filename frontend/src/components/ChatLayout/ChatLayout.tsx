@@ -6,6 +6,7 @@ import { MessageInput } from '@/components/MessageInput/MessageInput';
 import { ErrorMessage } from '@/components/ErrorMessage/ErrorMessage';
 import type { Message, ConversationMetadata } from '@/types';
 import styles from './ChatLayout.module.css';
+import { AssistantChatProvider } from '@/components/AssistantChat/AssistantChat';
 
 interface ChatLayoutProps {
   messages: Message[];
@@ -89,45 +90,56 @@ export function ChatLayout({
         onDeleteConversation={onDeleteConversation}
         onRetryLoad={onRetryLoad}
       />
-      <main className={styles.main}>
-        <ChatHeader
-          onNewConversation={onClearMessages}
-          onToggleSidebar={handleToggleSidebar}
-          onOpenSettings={onOpenSettings}
-          onLogout={onLogout}
-          agentName={agentName}
-          userName={userName}
-        />
-        <MessageDisplay
-          messages={messages}
-          isLoading={isLoading}
-          progressMessage={progressMessage}
-          userName={userName}
-        />
-        {error && (
-          <ErrorMessage
-            error={error.message}
-            onRetry={onRetry}
-            onCancel={handleCancelError}
+      <AssistantChatProvider
+        messages={messages}
+        isLoading={isLoading}
+        onSend={onSendMessage}
+        onCancel={onCancelRequest}
+      >
+        <main className={styles.main}>
+          <ChatHeader
+            onNewConversation={onClearMessages}
+            onToggleSidebar={handleToggleSidebar}
+            onOpenSettings={onOpenSettings}
+            onLogout={onLogout}
+            agentName={agentName}
+            userName={userName}
           />
-        )}
-        {saveError && (
-          <div className={styles.saveNotice} role="status">
-            <span className={styles.saveNoticeText}>{saveError}</span>
-            {onDismissSaveError && (
-              <button
-                type="button"
-                className={styles.saveNoticeDismiss}
-                onClick={onDismissSaveError}
-                aria-label="Dismiss save notice"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-        )}
-        <MessageInput onSend={onSendMessage} disabled={isLoading} onCancel={onCancelRequest} />
-      </main>
+          <MessageDisplay
+            messages={messages}
+            isLoading={isLoading}
+            progressMessage={progressMessage}
+            userName={userName}
+          />
+          {error && (
+            <ErrorMessage
+              error={error.message}
+              onRetry={onRetry}
+              onCancel={handleCancelError}
+            />
+          )}
+          {saveError && (
+            <div className={styles.saveNotice} role="status">
+              <span className={styles.saveNoticeText}>{saveError}</span>
+              {onDismissSaveError && (
+                <button
+                  type="button"
+                  className={styles.saveNoticeDismiss}
+                  onClick={onDismissSaveError}
+                  aria-label="Dismiss save notice"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          )}
+          <MessageInput
+            onSend={onSendMessage}
+            disabled={isLoading}
+            onCancel={onCancelRequest}
+          />
+        </main>
+      </AssistantChatProvider>
     </div>
   );
 }
