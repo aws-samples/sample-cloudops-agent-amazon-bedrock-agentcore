@@ -1,11 +1,27 @@
+import type { Presentation } from '@/components/tool-ui/schema';
+import type { ToolOutput } from '@/services/toolOutput';
+
+export interface ToolPart {
+  type: 'tool';
+  toolCallId: string;
+  toolName: string;
+  status: 'running' | 'completed' | 'failed' | 'interrupted' | 'blocked' | 'unavailable';
+  presentation?: Presentation;
+  output?: ToolOutput;
+}
+
+export type MessagePart = { type: 'text'; text: string } | ToolPart;
+
 // Message types
 export interface Message {
   id: string;
   role: 'user' | 'agent';
   content: string;
   timestamp: number;
-  status: 'sent' | 'delivered' | 'error';
+  status: 'sent' | 'delivered' | 'error' | 'streaming' | 'interrupted' | 'restricted';
   errorMessage?: string;
+  partsVersion?: 1;
+  parts?: MessagePart[];
 }
 
 // Chat state
@@ -23,15 +39,13 @@ export interface ChatState {
 
 // Chat context actions
 export type ChatAction =
-  | { type: 'SEND_MESSAGE'; payload: { content: string } }
-  | { type: 'RECEIVE_MESSAGE'; payload: { content: string } }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_PROGRESS'; payload: string | null }
   | { type: 'SET_ERROR'; payload: { message: string; originalPrompt: string } | null }
   | { type: 'SET_SAVE_ERROR'; payload: string | null }
-  | { type: 'CLEAR_MESSAGES' }
   | { type: 'RETRY_MESSAGE'; payload: { originalPrompt: string } }
-  | { type: 'SET_MESSAGES'; payload: Message[] };
+  | { type: 'SET_MESSAGES'; payload: Message[] }
+  | { type: 'UPSERT_MESSAGE'; payload: Message };
 
 // App config — read from localStorage("appConfig")
 export interface AppConfig {
@@ -71,23 +85,6 @@ export interface AgentCredentials {
   sessionToken?: string;
 }
 
-// Component prop types
-export interface MessageInputProps {
-  onSend: (text: string) => void;
-  disabled: boolean;
-  onCancel?: () => void;
-}
-
-export interface TypingIndicatorProps {
-  progressMessage?: string | null;
-}
-
-export interface ErrorMessageProps {
-  error: string;
-  onRetry: () => void;
-  onCancel: () => void;
-}
-
 // Conversation metadata (returned from list endpoint, no messages)
 export interface ConversationMetadata {
   conversationId: string;
@@ -124,35 +121,8 @@ export type ConversationAction =
   | { type: 'ADD_CONVERSATION'; payload: ConversationMetadata }
   | { type: 'REMOVE_CONVERSATION'; payload: string }
   | { type: 'RENAME_CONVERSATION'; payload: { id: string; name: string } }
+  | { type: 'UPDATE_METADATA'; payload: ConversationMetadata }
   | { type: 'SET_LOADING_LIST'; payload: boolean }
   | { type: 'SET_LOADING_CONVERSATION'; payload: boolean }
   | { type: 'SET_LIST_ERROR'; payload: string | null }
   | { type: 'SET_CONVERSATION_ERROR'; payload: string | null };
-
-export interface SidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
-  conversations?: ConversationMetadata[];
-  activeConversationId?: string | null;
-  isLoadingList?: boolean;
-  listError?: string | null;
-  onSelectConversation?: (id: string) => void;
-  onNewConversation?: () => void;
-  onRenameConversation?: (id: string, name: string) => void;
-  onDeleteConversation?: (id: string) => void;
-  onRetryLoad?: () => void;
-}
-
-export interface ChatHeaderProps {
-  onNewConversation: () => void;
-  onToggleSidebar: () => void;
-  onOpenSettings?: () => void;
-  onLogout?: () => void;
-  agentName: string;
-  userName: string;
-}
-
-export interface ScrollToBottomProps {
-  onClick: () => void;
-  visible: boolean;
-}

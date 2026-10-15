@@ -1,71 +1,9 @@
-.container {
-  position: relative;
-  background-color: #1e293b;
-  border-radius: var(--radius-md);
-  margin: var(--space-2) 0;
-  overflow: hidden;
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-1) var(--space-2);
-  background-color: #0f172a;
-  border-bottom: 1px solid #334155;
-  min-height: 32px;
-}
-
-.language {
-  font-family: 'Fira Code', Consolas, 'Courier New', monospace;
-  font-size: var(--font-size-meta);
-  color: #94a3b8;
-  text-transform: lowercase;
-  user-select: none;
-}
-
-.copyButton {
-  font-family: var(--font-family);
-  font-size: var(--font-size-meta);
-  color: #94a3b8;
-  background: transparent;
-  border: 1px solid #334155;
-  border-radius: var(--radius-sm);
-  padding: 2px var(--space-1);
-  cursor: pointer;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
-  line-height: 1.4;
-}
-
-.copyButton:hover {
-  background-color: #334155;
-  color: #e2e8f0;
-}
-
-.copyButton:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-.copyButton.copied {
-  color: var(--color-success);
-  border-color: var(--color-success);
-}
-
-.pre {
-  margin: 0;
-  padding: var(--space-2);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.code {
-  font-family: 'Fira Code', Consolas, 'Courier New', monospace;
-  font-size: 14px;
-  line-height: 1.6;
-  color: #e2e8f0;
-  white-space: pre;
-  word-break: normal;
-  word-wrap: normal;
-  tab-size: 2;
-}
+.container { position: relative; border: 1px solid var(--border); border-radius: 12px; margin: 16px 0; overflow: hidden; background: var(--muted); }
+.header { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; border-bottom: 1px solid var(--border); min-height: 36px; }
+.language { font-family: var(--font-mono); font-size: 11px; color: var(--muted-foreground); }
+.copyButton { font-size: 11px; color: var(--muted-foreground); border-radius: 5px; padding: 4px 8px; line-height: 1.4; }
+.copyButton:hover { color: var(--foreground); background: var(--background); }
+.copyButton:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.copyButton.copied { color: var(--foreground); }
+.pre { margin: 0; padding: 16px; overflow-x: auto; }
+.code { font-family: var(--font-mono); font-size: 13px; line-height: 1.7; color: var(--foreground); white-space: pre; overflow-wrap: normal; tab-size: 2; }

@@ -1,4 +1,5 @@
 import { AppConfig, AgentCredentials } from '@/types';
+import { readAgentStream, AgentStreamError, type AgentEvent } from './agentStream';
 import { Sha256 } from '@aws-crypto/sha256-js';
 import { SignatureV4 } from '@smithy/signature-v4';
 
@@ -37,7 +38,8 @@ export async function invokeAgent(
   config: AppConfig,
   credentials: AgentCredentials,
   accessToken?: string | null,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  onEvent?: (event: AgentEvent) => void
 ): Promise<string> {
   if (!config.agentcore?.enabled) {
     throw new AgentCoreError('AgentCore is not enabled in configuration');
@@ -65,7 +67,8 @@ export async function invokeAgent(
     const hostname = `bedrock-agentcore.${region}.amazonaws.com`;
     const encodedArn = encodeURIComponent(agentArn);
     const path = `/runtimes/${encodedArn}/invocations`;
-    const url = `https://${hostname}${path}`;
+    const local = import.meta.env.DEV && import.meta.env.VITE_LOCAL_API === '1';
+    const url = local ? '/local-api/invocations' : `https://${hostname}${path}`;
 
     // The payload IS the raw HTTP body — contains the data the @app.entrypoint receives
     // The backend's invoke(payload) gets this after JSON.parse.
@@ -84,6 +87,7 @@ export async function invokeAgent(
       sessionId,
       userId: 'unused-identity-derived-server-side',
       ...(accessToken ? { accessToken } : {}),
+      ...(onEvent ? { responseMode: 'stream-v1' } : {}),
     });
 
     // Sign the request with SigV4
@@ -105,14 +109,21 @@ export async function invokeAgent(
       path,
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        'Accept': onEvent ? 'text/event-stream, application/json' : 'application/json',
         'X-Amzn-Bedrock-AgentCore-Runtime-Session-Id': sessionId,
         'host': hostname,
       },
       body,
     };
 
-    const signedRequest = await signer.sign(request);
+    const signedRequest = local ? {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'text/event-stream, application/json',
+        'Authorization': `Bearer ${accessToken ?? ''}`,
+        'X-Amzn-Bedrock-AgentCore-Runtime-Session-Id': sessionId,
+      },
+    } : await signer.sign(request);
 
     // Make the HTTP request
     const response = await fetch(url, {
@@ -123,14 +134,18 @@ export async function invokeAgent(
     });
 
     if (!response.ok) {
-      const errorText = await response.text().catch(() => '');
       throw new AgentCoreError(
-        `AgentCore returned HTTP ${response.status}: ${errorText || response.statusText}`,
+        response.status === 401 || response.status === 403
+          ? 'Your session or permissions do not allow this request. Sign in again and retry.'
+          : `AgentCore returned HTTP ${response.status}. Please retry.`,
         response.status
       );
     }
 
-    // Read the streaming response body
+    if (onEvent && response.headers?.get('content-type')?.includes('text/event-stream')) {
+      return await readAgentStream(response, onEvent, signal);
+    }
+    // Older deployments return a final JSON response even when streaming is requested.
     const result = await readStreamResponse(response, signal);
     return result;
   } catch (error: unknown) {
@@ -138,7 +153,7 @@ export async function invokeAgent(
       throw error;
     }
 
-    if (error instanceof AgentCoreError) {
+    if (error instanceof AgentCoreError || error instanceof AgentStreamError) {
       throw error;
     }
 
@@ -198,13 +213,12 @@ function parseAgentResult(rawResult: string): string {
     throw new AgentCoreError('Empty response from AgentCore Runtime');
   }
 
-  try {
-    const parsed = JSON.parse(rawResult);
-    if (typeof parsed.result === 'string') {
-      return parsed.result;
-    }
-    return rawResult;
-  } catch {
-    return rawResult;
+  let parsed: unknown;
+  try { parsed = JSON.parse(rawResult); }
+  catch { return rawResult; }
+  if (typeof parsed === 'object' && parsed !== null) {
+    if ('error' in parsed) throw new AgentCoreError('The investigation could not finish. Please retry.');
+    if ('result' in parsed && typeof parsed.result === 'string') return parsed.result;
   }
+  return rawResult;
 }

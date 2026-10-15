@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
-import rehypeHighlight from 'rehype-highlight';
 import type { Components } from 'react-markdown';
 import { CodeBlock } from '@/components/MarkdownRenderer/CodeBlock';
 import styles from './MarkdownRenderer.module.css';
@@ -26,7 +25,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         </a>
       ),
       code: ({ className, children, ...props }) => {
-        // Detect if this is a fenced code block (has language class from rehype-highlight)
+        // Fenced blocks carry a language class; keep raw text intact for display/copy.
         const match = /language-(\w+)/.exec(className || '');
         const isInline = !match && !className;
 
@@ -42,6 +41,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         const codeString = String(children).replace(/\n$/, '');
         return <CodeBlock code={codeString} language={match?.[1]} />;
       },
+      pre: ({ children }) => <>{children}</>,
       table: ({ children, ...props }) => (
         <div className={styles.tableWrapper}>
           <table className={styles.table} {...props}>
@@ -87,7 +87,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
       <div className={styles.container}>
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
-          rehypePlugins={[rehypeSanitize, rehypeHighlight]}
+          rehypePlugins={[rehypeSanitize]}
           components={components}
         >
           {content}

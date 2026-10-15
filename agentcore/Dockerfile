@@ -31,7 +31,11 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
 COPY agent_runtime.py .
+COPY agent_stream.py .
+COPY tool_presentation.py .
+COPY tool_output.py .
 COPY system_prompt.py .
+COPY access_notice.py .
 COPY observability.py .
 COPY streamable_http_sigv4.py .
 # Bearer transport (per-user JWT forwarding) and the pure authorization model

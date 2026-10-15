@@ -8,6 +8,7 @@ from bedrock_agentcore.memory.integrations.strands.config import AgentCoreMemory
 from bedrock_agentcore.memory.integrations.strands.session_manager import AgentCoreMemorySessionManager
 from strands import Agent
 from system_prompt import build_system_prompt
+from access_notice import create_access_notice_tool
 from strands.models import BedrockModel
 from strands.tools.mcp import MCPClient
 from streamable_http_sigv4 import streamablehttp_client_with_sigv4
@@ -342,6 +343,38 @@ def initialize_agent_with_gateway():
         )
 
 
+def create_request_agent(request_tools, session_id, verified_sub):
+    """Build the same identity-scoped agent for JSON and streaming invocations."""
+    session_manager = None
+    if MEMORY_ID:
+        try:
+            # Req 2.1/3.2/3.3: isolate memory by the verified Cognito subject;
+            # never trust payload userId. Preserve this user's session continuity.
+            memory_config = AgentCoreMemoryConfig(
+                memory_id=MEMORY_ID,
+                session_id=session_id,
+                actor_id=verified_sub if verified_sub else TOKENLESS_MEMORY_ACTOR_ID,
+            )
+            session_manager = AgentCoreMemorySessionManager(
+                agentcore_memory_config=memory_config, region_name=AWS_REGION
+            )
+        except Exception:
+            logger.warning("Memory initialization failed; proceeding without memory")
+
+    tool_names = [tool if isinstance(tool, str) else tool.tool_name for tool in request_tools]
+    notice_tool = create_access_notice_tool(tool_names)
+    agent_kwargs = {
+        "model": model,
+        "tools": [*request_tools, notice_tool],
+        "system_prompt": build_system_prompt(get_current_date_utc(), tool_names),
+        "callback_handler": None,  # Do not print model/tool content into runtime logs.
+        "trace_attributes": {"session.id": session_id},
+    }
+    if session_manager is not None:
+        agent_kwargs["session_manager"] = session_manager
+    return Agent(**agent_kwargs)
+
+
 # Initialize agent with Gateway
 logger.info("🚀 Initializing agent with Gateway-backed MCP tools using IAM SigV4 authentication")
 initialize_agent_with_gateway()
@@ -393,6 +426,16 @@ def invoke(payload, context=None):
     # the untrusted payload ``userId`` is never used as identity (Req 3.2).
     verified_sub = resolve_verified_sub(user_token, context)
 
+    if payload.get("responseMode") == "stream-v1":
+        from agent_stream import stream_response
+        return stream_response(
+            request_mcp_client,
+            lambda: create_request_agent(
+                list_tools_with_pagination(request_mcp_client), session_id, verified_sub
+            ),
+            user_message,
+        )
+
     # Per-request path: open the user's MCP client connection, discover tools
     # through that connection, build a per-request agent with exactly those
     # tools, and invoke it. The catalog returned by discovery is already
@@ -428,55 +471,7 @@ def invoke(payload, context=None):
             request_tools = list_tools_with_pagination(request_mcp_client)
             logger.info(f"✅ Retrieved {len(request_tools)} tools for this request (all pages)")
 
-            # Configure the memory session manager when memory is enabled,
-            # feeding it the per-request tools.
-            session_manager = None
-            if MEMORY_ID:
-                try:
-                    # Key AgentCore Memory to the verified Cognito ``sub``
-                    # (BUG 1 fix, Req 2.1) so distinct users always get distinct
-                    # memory actors and never share one. The payload ``userId``
-                    # is NOT used as identity. When no ``sub`` resolves (token-
-                    # less request) we fail closed to a single non-cross-user-
-                    # identifying placeholder actor rather than the untrusted
-                    # payload ``userId`` (Req 3.2). ``session_id`` keying is
-                    # preserved for single-user session continuity (Req 3.3).
-                    memory_actor_id = verified_sub if verified_sub else TOKENLESS_MEMORY_ACTOR_ID
-                    logger.info(f"💾 Configuring memory - Memory ID: {MEMORY_ID}, Session: {session_id}")
-
-                    memory_config = AgentCoreMemoryConfig(
-                        memory_id=MEMORY_ID,
-                        session_id=session_id,
-                        actor_id=memory_actor_id
-                    )
-
-                    session_manager = AgentCoreMemorySessionManager(
-                        agentcore_memory_config=memory_config,
-                        region_name=AWS_REGION
-                    )
-
-                    logger.info("✅ Memory session manager configured")
-
-                except Exception as e:
-                    logger.warning(f"⚠️ Could not configure memory, proceeding without memory: {e}")
-                    session_manager = None
-            else:
-                logger.info("ℹ️ Memory not configured, using agent without memory")
-
-            # Build the per-request agent with the per-request tools and the
-            # static system prompt (plus the memory session manager when
-            # configured). Memory, when present, is handled automatically by
-            # the session manager.
-            agent_kwargs = {
-                "model": model,
-                "tools": request_tools,
-                "system_prompt": system_prompt_template,
-                "callback_handler": None,  # Do not print model/tool content into runtime logs.
-                "trace_attributes": {"session.id": session_id},
-            }
-            if session_manager is not None:
-                agent_kwargs["session_manager"] = session_manager
-            request_agent = Agent(**agent_kwargs)
+            request_agent = create_request_agent(request_tools, session_id, verified_sub)
 
             logger.info("🤖 Invoking agent...")
             result = request_agent(user_message)

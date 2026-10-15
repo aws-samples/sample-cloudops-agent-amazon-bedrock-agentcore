@@ -11,40 +11,6 @@ export const initialChatState: ChatState = {
 
 export function chatReducer(state: ChatState, action: ChatAction): ChatState {
   switch (action.type) {
-    case 'SEND_MESSAGE': {
-      const userMessage: Message = {
-        id: uuidv4(),
-        role: 'user',
-        content: action.payload.content,
-        timestamp: Date.now(),
-        status: 'sent',
-      };
-      return {
-        ...state,
-        messages: [...state.messages, userMessage],
-        isLoading: true,
-        progressMessage: null,
-        error: null,
-        saveError: null,
-      };
-    }
-
-    case 'RECEIVE_MESSAGE': {
-      const agentMessage: Message = {
-        id: uuidv4(),
-        role: 'agent',
-        content: action.payload.content,
-        timestamp: Date.now(),
-        status: 'delivered',
-      };
-      return {
-        ...state,
-        messages: [...state.messages, agentMessage],
-        isLoading: false,
-        progressMessage: null,
-      };
-    }
-
     case 'SET_LOADING':
       return {
         ...state,
@@ -72,11 +38,6 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         saveError: action.payload,
       };
 
-    case 'CLEAR_MESSAGES':
-      return {
-        ...initialChatState,
-      };
-
     case 'RETRY_MESSAGE': {
       const userMessage: Message = {
         id: uuidv4(),
@@ -92,6 +53,17 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         progressMessage: null,
         error: null,
         saveError: null,
+      };
+    }
+
+    case 'UPSERT_MESSAGE': {
+      const exists = state.messages.some(message => message.id === action.payload.id);
+      return {
+        ...state,
+        messages: exists
+          ? state.messages.map(message => message.id === action.payload.id ? action.payload : message)
+          : [...state.messages, action.payload],
+        isLoading: action.payload.status === 'streaming',
       };
     }
 

@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Authenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
+import { Cloud, LoaderCircle } from 'lucide-react';
 import { Amplify } from 'aws-amplify';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { ChatProvider, useChatContext } from '@/state/ChatContext';
 import { ConversationProvider, useConversationContext } from '@/state/ConversationContext';
-import { useProgressState } from '@/hooks/useProgressState';
 import { getAppConfig, getAgentName, loadRuntimeConfig } from '@/services/config';
 import { ChatLayout } from '@/components/ChatLayout/ChatLayout';
 import { ConfigEditor } from '@/components/ConfigEditor/ConfigEditor';
@@ -26,21 +26,10 @@ function configureAmplify(config: AppConfig) {
 /** Minimal full-screen notice used for the loading and deployment-error states. */
 function CenteredNotice({ title, body }: { title: string; body?: string }) {
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '12px',
-        padding: '24px',
-        textAlign: 'center',
-        color: '#1e293b',
-      }}
-    >
-      <h2 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>{title}</h2>
-      {body && <p style={{ fontSize: '14px', color: '#64748b', margin: 0, maxWidth: '520px' }}>{body}</p>}
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background px-6 text-center">
+      <Cloud className="text-muted-foreground size-7" strokeWidth={1.5} />
+      <h2 className="text-lg font-medium tracking-tight">{title}</h2>
+      {body ? <p className="text-muted-foreground max-w-lg text-sm leading-6">{body}</p> : <LoaderCircle className="text-muted-foreground size-4 animate-spin motion-reduce:animate-none" />}
     </div>
   );
 }
@@ -97,39 +86,10 @@ function App() {
         components={{
           Header() {
             return (
-              <div style={{
-                textAlign: 'center',
-                padding: '24px 24px 0',
-              }}>
-                <div style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 12px',
-                  fontSize: '20px',
-                  color: '#fff',
-                }}>
-                  ✦
-                </div>
-                <h2 style={{
-                  fontSize: '20px',
-                  fontWeight: 700,
-                  color: '#1e293b',
-                  margin: '0 0 4px',
-                }}>
-                  CloudOps Agent
-                </h2>
-                <p style={{
-                  fontSize: '14px',
-                  color: '#64748b',
-                  margin: 0,
-                }}>
-                  Agentic AI powered by Amazon Bedrock AgentCore
-                </p>
+              <div className="cloudops-login-heading">
+                <div className="cloudops-login-mark"><Cloud size={24} strokeWidth={1.5} /></div>
+                <h1>Welcome to CloudOps</h1>
+                <p>Sign in to investigate your AWS environment.</p>
               </div>
             );
           },
@@ -137,18 +97,23 @@ function App() {
       >
         {({ user, signOut }) => (
           <ConversationProvider>
-            <ChatProvider>
+            <ConversationChatProvider>
               <ChatLayoutWired
                 user={user}
                 signOut={signOut}
                 onOpenSettings={() => setShowConfig(true)}
               />
-            </ChatProvider>
+            </ConversationChatProvider>
           </ConversationProvider>
         )}
       </Authenticator>
     </div>
   );
+}
+
+function ConversationChatProvider({ children }: { children: React.ReactNode }) {
+  const { receiveSavedConversation } = useConversationContext();
+  return <ChatProvider onConversationSaved={receiveSavedConversation}>{children}</ChatProvider>;
 }
 
 interface ChatLayoutWiredProps {
@@ -158,9 +123,15 @@ interface ChatLayoutWiredProps {
 }
 
 function ChatLayoutWired({ user, signOut, onOpenSettings }: ChatLayoutWiredProps) {
+  const [sendError, setSendError] = useState<{ message: string; originalPrompt: string } | null>(null);
+  const [isPreparing, setIsPreparing] = useState(false);
+  const [canUseOperations, setCanUseOperations] = useState(false);
+  const preparing = useRef(false);
   const {
+    sessionId,
     messages,
     isLoading,
+    progressMessage,
     error,
     saveError,
     sendMessage,
@@ -168,6 +139,7 @@ function ChatLayoutWired({ user, signOut, onOpenSettings }: ChatLayoutWiredProps
     cancelRequest,
     setMessages,
     setSessionId,
+    forgetConversation,
     dismissSaveError,
   } = useChatContext();
 
@@ -175,6 +147,8 @@ function ChatLayoutWired({ user, signOut, onOpenSettings }: ChatLayoutWiredProps
     conversations,
     activeConversationId,
     isLoadingList,
+    isLoadingConversation,
+    conversationError,
     listError,
     loadConversations,
     createConversation,
@@ -183,7 +157,16 @@ function ChatLayoutWired({ user, signOut, onOpenSettings }: ChatLayoutWiredProps
     deleteConversation,
   } = useConversationContext();
 
-  const progressMessage = useProgressState(isLoading);
+  // Suggestions are a convenience, not authorization. Unknown roles stay non-admin;
+  // the verified token and Gateway policy still govern every actual tool call.
+  useEffect(() => {
+    let cancelled = false;
+    fetchAuthSession().then(session => {
+      const token = session.tokens?.accessToken ?? session.tokens?.idToken;
+      if (!cancelled) setCanUseOperations(token?.payload?.role === 'admin');
+    }).catch(() => { if (!cancelled) setCanUseOperations(false); });
+    return () => { cancelled = true; };
+  }, [user?.username]);
 
   // Load conversations on mount
   useEffect(() => {
@@ -220,41 +203,56 @@ function ChatLayoutWired({ user, signOut, onOpenSettings }: ChatLayoutWiredProps
 
   const handleSendMessage = useCallback(
     async (text: string) => {
-      const credentials = await getCredentials();
-      // #19: Ensure a persisted conversation exists BEFORE sending. Without
-      // this, the very first message is saved against the transient client
-      // session id (e.g. "agentcore-session-…"), which the history API rejects
-      // with HTTP 400 "Invalid conversationId format" — so the exchange is
-      // silently lost on reload. Creating (or reusing) a real conversation
-      // yields a UUID the API accepts, and aligns the AgentCore session id with
-      // the conversation. If creation fails, we still let the user get an
-      // answer; ChatContext then surfaces the save failure rather than
-      // implying the exchange was stored.
-      if (!activeConversationId) {
-        try {
-          const newId = await createConversation();
-          setSessionId(newId);
-        } catch {
-          // ConversationContext surfaces the creation error via its own state.
+      if (preparing.current) return;
+      preparing.current = true;
+      setIsPreparing(true);
+      setSendError(null);
+      try {
+        const credentials = await getCredentials();
+        // Preserve #19: create the persisted conversation before its first send.
+        // If history is unavailable, allow an answer and surface the save failure.
+        if (!activeConversationId) {
+          try {
+            const newId = await createConversation();
+            setSessionId(newId);
+          } catch {
+            // ConversationContext surfaces the creation error.
+          }
         }
+        // sendMessage captures its target synchronously and owns error handling.
+        void sendMessage(text, credentials);
+      } catch {
+        setSendError({ message: 'Sign in again to send your message, then retry.', originalPrompt: text });
+      } finally {
+        preparing.current = false;
+        setIsPreparing(false);
       }
-      sendMessage(text, credentials);
     },
     [getCredentials, sendMessage, activeConversationId, createConversation, setSessionId]
   );
 
   const handleRetry = useCallback(async () => {
-    const credentials = await getCredentials();
-    retryMessage(credentials);
-  }, [getCredentials, retryMessage]);
+    if (sendError) {
+      await handleSendMessage(sendError.originalPrompt);
+      return;
+    }
+    try {
+      const credentials = await getCredentials();
+      retryMessage(credentials);
+    } catch {
+      setSendError({ message: 'Sign in again to send your message, then retry.', originalPrompt: error?.originalPrompt ?? '' });
+    }
+  }, [getCredentials, retryMessage, sendError, handleSendMessage, error]);
 
   const handleNewConversation = useCallback(async () => {
+    if (preparing.current) return;
+    setSendError(null);
     try {
       const newId = await createConversation();
       // Don't call clearMessages() — that would cancel in-flight requests for the current conversation
       // Just clear the UI and switch session
-      setMessages([]);
       setSessionId(newId);
+      setMessages([]);
     } catch {
       // ConversationContext handles the error state
     }
@@ -262,11 +260,12 @@ function ChatLayoutWired({ user, signOut, onOpenSettings }: ChatLayoutWiredProps
 
   const handleSelectConversation = useCallback(
     async (id: string) => {
-      if (id === activeConversationId) return;
+      if (preparing.current || id === activeConversationId) return;
       try {
         const loadedMessages = await switchConversation(id);
-        setMessages(loadedMessages);
+        setSendError(null);
         setSessionId(id);
+        setMessages(loadedMessages);
       } catch {
         // ConversationContext handles the error state
       }
@@ -286,20 +285,25 @@ function ChatLayoutWired({ user, signOut, onOpenSettings }: ChatLayoutWiredProps
       // retarget the chat session — so the UI does not keep showing stale
       // messages or send the next message to a deleted id.
       const newActiveId = await deleteConversation(id);
+      forgetConversation(id);
       if (newActiveId) {
-        setMessages([]);
         setSessionId(newActiveId);
+        setMessages([]);
       }
     },
-    [deleteConversation, setMessages, setSessionId]
+    [deleteConversation, forgetConversation, setMessages, setSessionId]
   );
 
   return (
     <ChatLayout
+      sessionId={sessionId}
+      canUseOperations={canUseOperations}
       messages={messages}
       isLoading={isLoading}
       progressMessage={progressMessage}
-      error={error}
+      isPreparing={isPreparing || isLoadingConversation}
+      error={sendError ?? error}
+      conversationError={conversationError}
       saveError={saveError}
       onDismissSaveError={dismissSaveError}
       agentName={agentName}
