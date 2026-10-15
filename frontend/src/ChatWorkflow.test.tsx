@@ -416,7 +416,7 @@ describe('CloudOps chat workflow', () => {
     expect(api.requests.some(request => request.url.startsWith('/local-api'))).toBe(false);
     const invocation = api.requests.find(request => request.url.includes('bedrock-agentcore.'));
     expect(invocation?.headers.get('authorization')).toMatch(/^AWS4-HMAC-SHA256 /);
-    expect(api.requests.some(request => request.url.startsWith('https://history.example.test'))).toBe(true);
+    expect(api.requests.some(request => new URL(request.url, 'http://localhost').origin === 'https://history.example.test')).toBe(true);
   });
 
   it('lets users inspect and copy a raw tool result and restores it from history', async () => {

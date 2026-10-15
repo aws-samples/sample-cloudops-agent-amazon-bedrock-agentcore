@@ -14,9 +14,26 @@ For cloud engineers, platform teams, and developers learning to connect an agent
 
 ## Demo
 
-[![Real CloudOps app: create a conversation, request a CloudWatch alarm summary, then reload and reopen the saved answer](docs/media/cloudops-demo.gif)](docs/media/cloudops-demo.png)
+[![CloudOps investigation workspace preview: ask a cost question, inspect a chart and raw JSON, then reopen the conversation](docs/media/cloudops-demo.gif)](docs/media/cloudops-demo.mp4)
 
-**New Conversation → alarm check → answer → reload and reopen.** Recorded against the deployed implementation from [`c5c0d5c`](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/commit/c5c0d5c) in an authorized demo account. The model and tool responses are real; the username is masked and waiting time is shortened. [View the static screenshot](docs/media/cloudops-demo.png). Deploy your own copy; this repository does not provide a public hosted service.
+**Ask → watch tool activity → inspect evidence → reopen.** This 12-second walkthrough shows the redesigned assistant-ui workspace using actual UI components with **synthetic costs and simulated backend events**, not a deployed AWS run. The on-screen label identifies the preview. [Watch the MP4](docs/media/cloudops-demo.mp4) · [View the desktop screenshot](docs/media/cloudops-demo.png) · [Media provenance](docs/media/README.md).
+
+| Cost investigation | Mobile access restriction |
+| --- | --- |
+| ![Desktop workspace with a labeled USD cost chart and expandable raw JSON](docs/media/cloudops-demo.png) | <img src="docs/media/cloudops-mobile.png" width="230" alt="Mobile workspace showing catalogue-based access restriction, not a Gateway policy denial"> |
+
+<details>
+<summary>More screenshots: workspace, resource evidence, raw JSON, sign-in, and settings</summary>
+
+![Chat-first workspace with sidebar history and suggested investigations](docs/media/cloudops-workspace.png)
+![Resource table with expandable source output](docs/media/cloudops-resources.png)
+![Expanded raw tool JSON with successful copy feedback](docs/media/cloudops-raw-json.png)
+![Redesigned Cognito sign-in screen with empty credential fields](docs/media/cloudops-login.png)
+![Workspace settings using illustrative connection IDs](docs/media/cloudops-settings.png)
+
+</details>
+
+The earlier [deployed alarm demo](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/blob/ed5ef5588267f5c479705300793abf2f4521820e/docs/media/cloudops-demo.gif) remains available at its original revision. It shows the old UI, not this feature's deployed state. See [local/live-service QA evidence and remaining deployment checks](docs/agentic-chat-qa.md). Deploy your own copy; this repository does not provide a public hosted service.
 
 Three useful starting points:
 
@@ -121,7 +138,7 @@ In **AWS Amplify Hosting**, create an app using **Deploy without Git** and uploa
 
 `make frontend` bakes the deployment's `FrontEndConfig` into the bundle (`app-config.json`), so opening the app URL takes users straight to **sign-in** — no per-browser setup, and clearing storage or using another browser still works ([#23](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/23)). The baked file holds only non-secret values (pool IDs, the runtime ARN, the API URL, and Regions). Skip to the sign-in step below.
 
-If you build **without** a deployed backend (a "bring your own backend" bundle) or run locally in development, the app shows a setup screen instead. It has **individual fields, not a JSON import** — copy each value from `make config` (the `FrontEndConfig` output) into these controls:
+If you build **without** a deployed backend (a "bring your own backend" bundle), the app shows a setup screen instead. It has **individual fields, not a JSON import** — copy each value from `make config` (the `FrontEndConfig` output) into these controls:
 
 | Output field | Setup control |
 | --- | --- |
@@ -141,10 +158,20 @@ Click **Save**; the page reloads. Setup-form settings are stored in this browser
 1. Sign in as **`admin`**, using the temporary password emailed to `COGNITO_ADMIN_EMAIL`. Change it when prompted. The bootstrap user belongs to the Cognito `Administrators` group.
 2. Send your first message straight away — the first send now creates a persisted conversation automatically, so the exchange survives a reload ([#19](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/19) fixed). Clicking **New Conversation** first is optional.
 3. Send: **“Use CloudWatch to check active alarms in this Region and summarize in one sentence.”** Include your chosen Region if different from the tool default. Expect an alarm summary or a valid empty result—not a permissions/configuration error.
-4. Wait for the final answer, then reload and reopen the conversation from the sidebar. Both your question and the answer should return.
-5. For the non-admin path, create a separate Cognito user outside `Administrators`. A pricing question is allowed; operational CloudWatch/CloudTrail/Inventory calls are denied and return a role-appropriate "not available for your role" response rather than a generic error ([#18](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/issues/18) fixed). The exact wording is not guaranteed, and it names no denied-tool data.
+4. Observe incremental text and real tool-running/completed states. Inspect supported result tables/charts and expandable, copyable **Raw JSON**. After completion, reload and reopen the conversation from the sidebar; the question, answer, and captured tool evidence should return.
+5. Test with a separate Cognito user outside `Administrators`. Billing/pricing is available; operational CloudWatch/CloudTrail/Inventory tools are hidden from discovery and separately denied by invocation policy. The **admin-only** alarm suggestion demonstrates the restriction UX. A catalogue-based restriction does not mean a call reached Gateway policy; no restricted tool data should be returned.
 
-The UI renders the **final JSON result**, not token-by-token model output. **Stop** cancels the browser's request; it does not guarantee cancellation of backend execution or charges.
+The UI requests **incremental text and tool events**; it also accepts older final-JSON runtimes during staged deployment. **Stop** cancels browser receipt and marks partial output incomplete; it does not guarantee cancellation of backend execution or charges. See [the event, history, and safety contracts](docs/agentic-chat.md).
+
+### Local full-stack development
+
+With an existing backend and AWS profile, run:
+
+```bash
+AWS_PROFILE="<your-demo-profile>" AWS_REGION="<your-region>" make dev
+```
+
+Open **http://127.0.0.1:5173** and use an existing Cognito user. The new UI, AgentCore SDK runtime, and history handler run locally; Cognito, Bedrock, Gateway/MCP, and Memory remain **live AWS services** and can incur charges. Local history is disposable and resets when the backend restarts. This command creates no cloud resources and performs no deployment. [Details and verification commands](docs/agentic-chat.md#complete-local-development).
 
 ## Extend this sample
 
@@ -221,8 +248,9 @@ never run evaluations.
 A healthy CloudFormation stack is not proof the app works. After deploying, run this quick smoke check:
 
 - [ ] Sign-in succeeds and the app is configured (login-first if you baked config with `make frontend`, otherwise the settings you entered).
-- [ ] Send a message, wait for the answer, then reload and reopen the conversation from the sidebar — both your question and the answer return.
-- [ ] A non-admin user's cost/pricing question works, while operational CloudWatch/CloudTrail/Inventory calls are denied with a role-appropriate message (no operational data).
+- [ ] Send a message and observe text/tool events before completion. Inspect a supported resource table or a cost chart with explicit dates, currency, and no more than 30 points; unknown/oversized shapes use a readable fallback.
+- [ ] Reload and reopen the conversation from the sidebar — your question, answer, and captured tool evidence return; raw JSON remains inspectable/copyable with any redaction/truncation labels.
+- [ ] A non-admin user's billing/pricing question works, while operational requests show restricted access without operational data. Verify catalogue filtering and actual invocation-policy denial separately.
 
 Record the revision, Region, model and results you test so runs are reproducible. (The [evidence in PR #25](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/pull/25) covers real browser queries, policy/identity, history and console traces; a fresh-account deploy-and-destroy walkthrough is not part of it.)
 
