@@ -14,7 +14,7 @@ Date: 2026-10-14–15. Feature based on `ed5ef55`; locally verified and accepted
 - Login, populated workspace, and settings: axe WCAG 2 A/AA audits report zero violations and zero incomplete checks after fixing message article semantics.
 - Desktop and 390px mobile layouts inspected. No document/thread horizontal overflow; wide tables scroll inside their region. Mobile drawer Escape restores focus to its toggle. Rename save/cancel and code-text fidelity have rendered regression coverage.
 - The final restriction fixture exposed and fixed a long-JSON flex overflow: at 390px the thread is now 390px wide with a 390px scroll width; raw JSON is 262px wide and scrolls its 1,441px content internally. Desktop containment also passes. These are explicitly synthetic presentation checks, not live permission evidence.
-- Final desktop/mobile restriction-workspace axe audits report **zero violations and zero incomplete checks** with raw output collapsed. Expanded long JSON produces zero violations and one incomplete contrast check for clipped scroll content; it is not claimed as a fully automated contrast pass. The earlier raw-output copy fixture and rendered copy regressions remain green. The empty sidebar now has a named navigation landmark and no empty ARIA list.
+- Final desktop/mobile restriction-workspace axe audits report **zero violations and zero incomplete checks** with raw output collapsed. Expanded long JSON produces zero violations and one incomplete automated contrast check for clipped scroll content. Manual measurement of the actual rendered CSS resolves that item at both 1365px and 390px: “Raw JSON” is **6.23:1** and code/copy text is **18.78:1**, exceeding the 4.5:1 small-text AA requirement. Colors were converted to sRGB through browser canvas, ancestor backgrounds alpha-composited, and WCAG relative luminance calculated; no opacity/image layers affect these elements. This is manual contrast evidence, not an automated axe pass. The earlier raw-output copy fixture and rendered copy regressions remain green. The empty sidebar now has a named navigation landmark and no empty ARIA list.
 - The non-admin suggestion is visible at desktop and 390px widths without horizontal overflow. Synthetic empty-workspace axe audits report zero violations and zero incomplete checks at both widths; these do not verify an authenticated policy denial.
 - Impeccable mechanical scan: no findings. The user-pinned starter is documented in `PRODUCT.md`, `DESIGN.md`, and the frontend upstream notice.
 
@@ -54,7 +54,17 @@ Fresh user-driven requests now verify the post-fix runtime path with the existin
 
 The user explicitly confirmed reopening both saved non-admin conversations, restoration of the cost answer and restriction card, raw-output inspection/copy, and no admin history visible. This is user-assisted browser evidence, not an automated cross-user HTTP test. Combined with the live runtime results and rendered/history isolation regressions, it satisfies the remaining local acceptance check.
 
-The feature-only commit includes `auto-delete=no` and excludes unrelated image/runtime-stack work, `.pi/`, `CLAUDE.md`, and research artifacts. No push/deploy is authorized.
+Implementation commit `847dc4b` includes `auto-delete=no` and excludes unrelated image/runtime-stack work, `.pi/`, `CLAUDE.md`, and research artifacts. The user subsequently requested deployment and a PR. Publication/deployment evidence will be recorded separately; a deployment account and reviewed apply plan still require confirmation.
+
+### Completion-audit follow-up
+
+The completion audit accepted the implementation, tests, visual acceptance, and commit, but requested additional live evidence before the goal can close:
+
+- A supported live cost result must stream into a chart and survive save/reopen. The 159-point billing fallback above does not satisfy this particular check. A daily-total query with no service grouping should yield seven supported points.
+- A direct read-only Gateway call with a valid existing non-admin token must establish an actual policy denial. Normal discovery hides CloudWatch, so the catalogue-reporting request above cannot establish invocation-policy enforcement. No tool will be added to the model catalogue or permissions changed to obtain this evidence.
+- Expanded-JSON contrast is now manually verified as recorded above.
+
+The automation browser remains signed out. These additional live checks need user-assisted access; no token may be pasted into the conversation or written to QA logs.
 
 The user approved the replacement layout ("good to go. continue"). Visual acceptance is complete and is not being reopened.
 
