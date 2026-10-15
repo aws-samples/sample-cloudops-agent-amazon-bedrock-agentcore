@@ -1,10 +1,10 @@
 # CloudOps UI media
 
-Captured 2026-10-15 from the implementation in `847dc4b` (QA documentation update `41f628b`). The recording and screenshots use the actual React components; a temporary capture harness supplied illustrative messages and simulated backend events. The harness is not part of the app or deployed bundle.
+Captured 2026-10-15 from the implementation in `847dc4b` (test-only origin assertion updated in `417051e`). The recording and screenshots use the actual React components; a temporary capture harness supplied illustrative messages and simulated backend events. The harness is not part of the app or deployed bundle.
 
 ## What the media demonstrates
 
-- `cloudops-demo.gif` / `cloudops-demo.mp4`: a 12-second presentation walkthrough. Enter a cost question, observe simulated discovery/tool states, inspect a seven-point USD chart and its exact-value table, expand/copy raw JSON, and reopen the preview conversation. Reopening uses fixture state, not an authenticated history API.
+- `cloudops-demo.gif` / `cloudops-demo.mp4`: a short presentation walkthrough. Enter a cost question, observe simulated discovery/tool states, inspect a seven-point USD chart and its exact-value table, expand/copy raw JSON, and reopen the preview conversation. The thread then scrolls to reveal the final response and holds for three seconds before the GIF loops. Reopening uses fixture state, not an authenticated history API.
 - `cloudops-demo.png`: desktop cost-chart presentation.
 - `cloudops-before.png`: the same synthetic cost question and daily values rendered by the legacy `ChatLayout` from merge-base `ed5ef55`.
 - `cloudops-workspace.png`: sidebar, empty thread, composer, and admin suggestions.
@@ -20,17 +20,20 @@ All fixture-based captures visibly say **“UI preview · synthetic data.”** T
 
 The native browser recording was explicitly stopped and its saved artifact verified. The source was 1280×900 at nominal 15 FPS; its capture receipt lacks wall-clock frame timing, so this is not an animation-performance benchmark. Both output files were fully decoded to check validity, and the MP4 was inspected through a contact sheet.
 
-- MP4: H.264, yuv420p, fast-start metadata, 12.2 seconds, approximately 176 KiB.
-- GIF: 960×675, 8 FPS, 96-color palette, 12.26 seconds, approximately 494 KiB.
+- MP4: H.264, yuv420p, fast-start metadata, approximately 13.53 seconds and 196 KiB; a three-second final-frame hold is encoded with `tpad`.
+- GIF: 960×675, 8 FPS, 96-color palette, approximately 13.38 seconds and 698 KiB; the final frame has an explicitly verified **3.00-second delay** before looping.
+
+The final response was measured inside the visible thread above the sticky composer before capture stopped. The pause is deliberate playback pacing, not a backend timing measurement.
 
 Encoding commands (source recording is private scratch output, not required at runtime):
 
 ```sh
-ffmpeg -i capture.webm -an -c:v libx264 -preset medium -crf 24 \
+ffmpeg -i capture.webm -vf 'tpad=stop_mode=clone:stop_duration=3' \
+  -an -c:v libx264 -preset medium -crf 24 \
   -pix_fmt yuv420p -movflags +faststart cloudops-demo.mp4
-ffmpeg -i cloudops-demo.mp4 -filter_complex \
+ffmpeg -i capture.webm -filter_complex \
   '[0:v]fps=8,scale=960:-1:flags=lanczos,split[x][y];[x]palettegen=max_colors=96:stats_mode=diff[p];[y][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle' \
-  -loop 0 cloudops-demo.gif
+  -loop 0 -final_delay 300 cloudops-demo.gif
 ```
 
 ## Earlier deployed demonstration

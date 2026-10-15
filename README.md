@@ -16,22 +16,7 @@ For cloud engineers, platform teams, and developers learning to connect an agent
 
 [![CloudOps investigation workspace preview: ask a cost question, inspect a chart and raw JSON, then reopen the conversation](docs/media/cloudops-demo.gif)](docs/media/cloudops-demo.mp4)
 
-**Ask → watch tool activity → inspect evidence → reopen.** This 12-second walkthrough shows the redesigned assistant-ui workspace using actual UI components with **synthetic costs and simulated backend events**, not a deployed AWS run. The on-screen label identifies the preview. [Watch the MP4](docs/media/cloudops-demo.mp4) · [View the desktop screenshot](docs/media/cloudops-demo.png) · [Media provenance](docs/media/README.md).
-
-| Cost investigation | Mobile access restriction |
-| --- | --- |
-| ![Desktop workspace with a labeled USD cost chart and expandable raw JSON](docs/media/cloudops-demo.png) | <img src="docs/media/cloudops-mobile.png" width="230" alt="Mobile workspace showing catalogue-based access restriction, not a Gateway policy denial"> |
-
-<details>
-<summary>More screenshots: workspace, resource evidence, raw JSON, sign-in, and settings</summary>
-
-![Chat-first workspace with sidebar history and suggested investigations](docs/media/cloudops-workspace.png)
-![Resource table with expandable source output](docs/media/cloudops-resources.png)
-![Expanded raw tool JSON with successful copy feedback](docs/media/cloudops-raw-json.png)
-![Redesigned Cognito sign-in screen with empty credential fields](docs/media/cloudops-login.png)
-![Workspace settings using illustrative connection IDs](docs/media/cloudops-settings.png)
-
-</details>
+**Ask → watch tool activity → inspect evidence → reopen.** This short walkthrough scrolls to the final response and pauses for three seconds before looping. It shows the redesigned assistant-ui workspace using actual UI components with **synthetic costs and simulated backend events**, not a deployed AWS run. The on-screen label identifies the preview. [Watch the MP4](docs/media/cloudops-demo.mp4) · [Media provenance](docs/media/README.md).
 
 The earlier [deployed alarm demo](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/blob/ed5ef5588267f5c479705300793abf2f4521820e/docs/media/cloudops-demo.gif) remains available at its original revision. It shows the old UI, not this feature's deployed state. See [local/live-service QA evidence and remaining deployment checks](docs/agentic-chat-qa.md). Deploy your own copy; this repository does not provide a public hosted service.
 
