@@ -28,7 +28,7 @@ CloudOps Agent remains the product name. The user explicitly requests a complete
 
 ## Evidence on Hand
 
-Real local admin inventory request, streamed tool card, final answer, and history reload were exercised. Fresh user-driven non-admin runs completed allowed billing and reported unavailable CloudWatch access without invoking restricted tools; both answers and tool states persisted in local history. The user confirmed non-admin reopen, raw-output inspection/copy, and no admin history visible. Deployed feature verification remains pending. Do not present illustrative data as live findings.
+Real local admin inventory request, streamed tool card, final answer, and history reload were exercised. Fresh user-driven non-admin runs completed allowed billing and reported unavailable CloudWatch access without invoking restricted tools; both answers and tool states persisted in local history. The user confirmed non-admin reopen, raw-output inspection/copy, and no admin history visible. The approved targeted AWS rollout is applied; hosted sign-in/assets and control-plane readiness are verified, while authenticated deployed investigation/history checks remain pending. Do not present illustrative data as live findings.
 
 ## Product Principles
 

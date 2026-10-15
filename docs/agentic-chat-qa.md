@@ -1,6 +1,6 @@
 # Agentic chat QA evidence
 
-Date: 2026-10-14–15. Feature based on `ed5ef55`; locally verified and accepted. No feature deployment.
+Date: 2026-10-14–15. Feature based on `ed5ef55`; locally verified and accepted. Targeted AWS rollout of `ef72359` completed on 2026-10-15; authenticated deployed E2E remains pending. See [deployment evidence](deployment-issue36.md).
 
 ## Verified locally
 
@@ -54,7 +54,7 @@ Fresh user-driven requests now verify the post-fix runtime path with the existin
 
 The user explicitly confirmed reopening both saved non-admin conversations, restoration of the cost answer and restriction card, raw-output inspection/copy, and no admin history visible. This is user-assisted browser evidence, not an automated cross-user HTTP test. Combined with the live runtime results and rendered/history isolation regressions, it satisfies the remaining local acceptance check.
 
-Implementation commit `847dc4b` includes `auto-delete=no` and excludes unrelated image/runtime-stack work, `.pi/`, `CLAUDE.md`, and research artifacts. The user subsequently requested deployment and a PR. Publication/deployment evidence will be recorded separately; a deployment account and reviewed apply plan still require confirmation.
+Implementation commit `847dc4b` includes `auto-delete=no` and excludes unrelated image/runtime-stack work, `.pi/`, `CLAUDE.md`, and research artifacts. PR #38 is ready for review. The user approved the targeted `aiops_demo`/`us-east-1` plan; runtime version 7, history repair/Lambda, and Amplify job 3 are applied. [Deployment evidence and remaining checks](deployment-issue36.md) distinguish readiness from authenticated E2E.
 
 ### Completion-audit follow-up
 
@@ -72,10 +72,10 @@ The automation browser is signed out. The user's own authenticated browser exerc
 
 ## Deployment and residual risks
 
-- **No feature deployment has occurred.** Local evidence is not deployed AgentCore transport verification.
+- **The approved targeted rollout is applied.** Runtime/DEFAULT version 7 is READY, Amplify job 3 succeeded, and the hosted sign-in/assets are verified. A tokenless IAM SSE smoke request failed Gateway JWT admission with 401, so successful deployed text/tool investigation is not claimed. [Full evidence](deployment-issue36.md).
 - A live Gateway invocation-denial test was not run because the automation session has no valid non-admin token. Catalogue restriction does not prove Cedar denied a call. Invocation policy and discovery filtering were not modified.
-- The already-deployed history API failed before these changes: its configured DynamoDB table was missing. Local history intentionally avoids changing that deployment. Repairing the deployed table remains a separate approved operational action.
-- `auto-delete=no` is present at the CDK app level. The inspected synthesized CloudOps templates include it on every resource that has tags. This does not prove the tag is already applied to deployed resources, nor that every resource type supports tags.
+- The deployed history table was missing before this feature. The approved repair recreated it empty with the original schema and PITR enabled; no backup was listed and old conversations were not recovered. A read-only Lambda/database list succeeds, but authenticated deployed history CRUD/reopen still needs verification.
+- `auto-delete=no` is present at the CDK app level and verified on the eight touched/new rollout resources. The inspected synthesized templates also include it on every tag-bearing resource; this does not prove deployment tagging on untouched resources or tag support for every resource type. Direct-service image/code/tag changes introduce CFN drift requiring deliberate reconciliation.
 - The build reports a large JavaScript chunk (approximately 1.49 MB / 437 KB gzip). npm audit previously reported 11 dependency advisories; no broad toolchain upgrade was included.
 - The model's first inventory answer misinterpreted an end-of-support date. The fresh non-admin "last 7 days" request selected `2026-10-08` through the exclusive end `2026-10-16`, producing eight daily periods. The UI preserves source data; successful transport/permission checks do not establish model answer accuracy.
 - Local history is lost when the backend restarts. Bedrock/Gateway/Memory calls are real and may incur normal AWS charges.
