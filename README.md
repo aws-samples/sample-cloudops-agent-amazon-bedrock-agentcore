@@ -14,9 +14,9 @@ For cloud engineers, platform teams, and developers learning to connect an agent
 
 ## Demo
 
-[![CloudOps investigation workspace preview: ask a cost question, inspect a chart and raw JSON, then reopen the conversation](docs/media/cloudops-demo.gif)](docs/media/cloudops-demo.mp4)
+[![CloudOps investigation workspace preview: one cost question, tool activity, chart and raw JSON, then the final response](docs/media/cloudops-demo.gif)](docs/media/cloudops-demo.mp4)
 
-**Ask → watch tool activity → inspect evidence → reopen.** This short walkthrough scrolls to the final response and pauses for three seconds before looping. It shows the redesigned assistant-ui workspace using actual UI components with **synthetic costs and simulated backend events**, not a deployed AWS run. The on-screen label identifies the preview. [Watch the MP4](docs/media/cloudops-demo.mp4) · [Media provenance](docs/media/README.md).
+**Ask → watch tool activity → inspect evidence → read the final response.** This uninterrupted walkthrough scrolls to the final response and pauses for three seconds before looping. It shows the redesigned assistant-ui workspace using actual UI components with **synthetic costs and simulated backend events**, not a deployed AWS run. The on-screen label identifies the preview. [Watch the MP4](docs/media/cloudops-demo.mp4) · [Media provenance](docs/media/README.md).
 
 The earlier [deployed alarm demo](https://github.com/aws-samples/sample-cloudops-agent-amazon-bedrock-agentcore/blob/ed5ef5588267f5c479705300793abf2f4521820e/docs/media/cloudops-demo.gif) remains available at its original revision. It shows the old UI, not this feature's deployed state. See [local/live-service QA evidence and remaining deployment checks](docs/agentic-chat-qa.md). Deploy your own copy; this repository does not provide a public hosted service.
 
