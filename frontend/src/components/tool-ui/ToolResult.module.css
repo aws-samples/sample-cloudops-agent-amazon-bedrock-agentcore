@@ -1,0 +1,15 @@
+.overflow { overflow-x: auto; max-width: 100%; }
+.table { border-collapse: collapse; width: 100%; font-size: 12px; line-height: 1.6; }
+.table caption, .chart figcaption { text-align: left; font-weight: 600; padding: 8px 0 12px; font-size: 12px; }
+.table th, .table td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.table th { font-weight: 500; color: var(--muted-foreground); white-space: nowrap; }
+.table td { font-variant-numeric: tabular-nums; max-width: 280px; overflow-wrap: anywhere; min-width: 90px; }
+.table tbody tr:last-child td, .table tbody tr:last-child th { border-bottom: 0; }
+.fallback { color: var(--muted-foreground); font-size: 12px; line-height: 1.6; padding-top: 4px; }
+.chart { margin: 0; }
+.bars { display: flex; flex-direction: column; gap: 10px; margin: 4px 0 16px; }
+.barRow { display: grid; grid-template-columns: minmax(80px, 1fr) minmax(40px, 2fr) minmax(45px, auto); align-items: center; gap: 12px; font-size: 11px; font-variant-numeric: tabular-nums; }
+.track { background: var(--muted); border-radius: 3px; overflow: hidden; }
+.bar { height: 12px; background: var(--primary); border-radius: 3px; }
+.chart summary { cursor: pointer; min-height: 36px; padding: 8px 0; font-size: 12px; color: var(--muted-foreground); }
+.overflow:focus-visible, .chart summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }

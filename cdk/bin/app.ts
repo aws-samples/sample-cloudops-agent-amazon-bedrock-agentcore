@@ -137,3 +137,6 @@ conversationHistoryStack.addDependency(agentRuntimeStack);
 // Add tags to all stacks
 cdk.Tags.of(app).add('Project', 'CloudOpsAgent');
 cdk.Tags.of(app).add('ManagedBy', 'CDK');
+// Exempts every resource from account cleanup tools (e.g. SpringClean) that
+// delete untagged resources after a retention period.
+cdk.Tags.of(app).add('auto-delete', 'no');

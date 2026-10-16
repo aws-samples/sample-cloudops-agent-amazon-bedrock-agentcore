@@ -1,95 +1,224 @@
-@import './theme.css';
-@import './reset.css';
+/* Copied from assistant-ui templates/default/app/globals.css; see UPSTREAM.md. */
+@import "tailwindcss";
+@import "tw-animate-css";
 
-/* Base styles */
-body {
-  font-family: var(--font-family);
-  font-size: var(--font-size-body);
-  color: var(--color-text);
-  background-color: var(--color-chat-bg);
-  line-height: 1.5;
+@custom-variant data-open (&:where([data-state="open"], [data-open]:not([data-open="false"])));
+@custom-variant data-closed (&:where([data-state="closed"], [data-closed]:not([data-closed="false"])));
+
+@theme inline {
+  @keyframes collapsible-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(
+        --radix-collapsible-content-height,
+        var(--collapsible-panel-height, auto)
+      );
+    }
+  }
+  @keyframes collapsible-up {
+    from {
+      height: var(
+        --radix-collapsible-content-height,
+        var(--collapsible-panel-height, auto)
+      );
+    }
+    to {
+      height: 0;
+    }
+  }
 }
 
-#root {
-  height: 100vh;
-  overflow: hidden;
+@source "../components";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: 1.5rem;
+  --animate-shimmer: shimmer-sweep var(--shimmer-duration, 1000ms) linear
+    infinite both;
+  @keyframes shimmer-sweep {
+    from {
+      background-position: 150% 0;
+    }
+    to {
+      background-position: -100% 0;
+    }
+  }
 }
 
-/* Focus indicator styles for keyboard accessibility */
-:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.141 0.005 285.823);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.141 0.005 285.823);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.141 0.005 285.823);
+  --primary: oklch(0.21 0.006 285.885);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.48 0.016 285.938);
+  --accent: oklch(0.967 0.001 286.375);
+  --accent-foreground: oklch(0.21 0.006 285.885);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
+  --ring: oklch(0.705 0.015 286.067);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.141 0.005 285.823);
+  --sidebar-primary: oklch(0.21 0.006 285.885);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.967 0.001 286.375);
+  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
+  --sidebar-border: oklch(0.92 0.004 286.32);
+  --sidebar-ring: oklch(0.705 0.015 286.067);
 }
 
-/* Remove default focus for mouse users */
-:focus:not(:focus-visible) {
-  outline: none;
+.dark {
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.21 0.006 285.885);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.92 0.004 286.32);
+  --primary-foreground: oklch(0.21 0.006 285.885);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --accent: oklch(0.274 0.006 286.033);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.552 0.016 285.938);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.21 0.006 285.885);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.274 0.006 286.033);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.552 0.016 285.938);
 }
 
-/* Screen-reader-only utility */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  :root {
+    color-scheme: light;
+  }
+
+  :root.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-optical-sizing: auto;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  #root { min-height: 100dvh; }
+  button, input, textarea { font: inherit; }
+  button:not(:disabled), summary { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
 }
 
-/*
- * Responsive breakpoints (reference)
- * --breakpoint-mobile: 375px
- * --breakpoint-tablet: 768px
- * --breakpoint-desktop: 1024px
- *
- * Sidebar visible:    >= 1024px
- * Sidebar collapsed:  < 1024px (hamburger menu)
- */
-
-/* Custom Amplify Authenticator styling */
-.auth-wrapper {
-  width: 100%;
-  height: 100vh;
-}
-
-.auth-wrapper [data-amplify-authenticator][data-state="signIn"],
-.auth-wrapper [data-amplify-authenticator][data-state="signUp"],
-.auth-wrapper [data-amplify-authenticator][data-state="resetPassword"],
-.auth-wrapper [data-amplify-authenticator][data-state="confirmSignIn"],
-.auth-wrapper [data-amplify-authenticator][data-state="confirmResetPassword"] {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 50%, #f3e8ff 100%);
-}
-
-.auth-wrapper [data-amplify-authenticator] {
-  --amplify-components-authenticator-router-border-width: 0;
-  --amplify-components-authenticator-router-box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-  --amplify-components-authenticator-router-border-color: transparent;
-  --amplify-components-authenticator-form-padding: 24px;
-  --amplify-colors-background-primary: #ffffff;
-  --amplify-colors-brand-primary-10: #eef2ff;
-  --amplify-colors-brand-primary-20: #e0e7ff;
-  --amplify-colors-brand-primary-40: #a5b4fc;
-  --amplify-colors-brand-primary-60: #818cf8;
-  --amplify-colors-brand-primary-80: #6366f1;
-  --amplify-colors-brand-primary-90: #4f46e5;
-  --amplify-colors-brand-primary-100: #4338ca;
-  --amplify-components-button-primary-background-color: #6366f1;
-  --amplify-components-button-primary-hover-background-color: #4f46e5;
-  --amplify-components-tabs-item-active-border-color: #6366f1;
-  --amplify-components-tabs-item-active-color: #6366f1;
+/* Cognito's complete auth/challenge flow, restyled in the same starter system. */
+.auth-wrapper { min-height: 100dvh; }
+.auth-wrapper [data-amplify-authenticator]:not([data-state="authenticated"]) {
+  min-height: 100dvh;
+  padding: 32px 20px;
+  background: var(--background);
+  --amplify-fonts-default-variable: var(--font-sans);
+  --amplify-colors-background-primary: var(--background);
+  --amplify-colors-font-primary: var(--foreground);
+  --amplify-colors-font-secondary: var(--muted-foreground);
+  --amplify-colors-brand-primary-80: var(--primary);
+  --amplify-colors-brand-primary-90: var(--foreground);
+  --amplify-colors-brand-primary-100: var(--foreground);
+  --amplify-components-authenticator-router-border-width: 1px;
+  --amplify-components-authenticator-router-border-color: var(--border);
+  --amplify-components-authenticator-router-box-shadow: none;
+  --amplify-components-authenticator-form-padding: 28px;
+  --amplify-components-button-primary-background-color: var(--primary);
+  --amplify-components-button-primary-hover-background-color: var(--foreground);
+  --amplify-components-button-link-color: var(--muted-foreground);
+  --amplify-components-fieldcontrol-border-color: var(--border);
+  --amplify-components-fieldcontrol-focus-border-color: var(--primary);
+  --amplify-components-tabs-item-active-border-color: var(--primary);
+  --amplify-components-tabs-item-active-color: var(--foreground);
   --amplify-radii-small: 8px;
   --amplify-radii-medium: 12px;
   --amplify-radii-large: 16px;
 }
+.auth-wrapper [data-amplify-router] { border-radius: 16px; overflow: hidden; }
+.cloudops-login-heading { padding: 0 24px 28px; text-align: center; }
+.cloudops-login-mark { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; margin: 0 auto 20px; border-radius: 16px; color: var(--background); background: var(--primary); }
+.cloudops-login-heading h1 { font-size: 24px; font-weight: 500; letter-spacing: -0.025em; }
+.cloudops-login-heading p { margin-top: 8px; font-size: 13px; color: var(--muted-foreground); }
+.auth-wrapper .amplify-button, .auth-wrapper .amplify-input, .auth-wrapper .amplify-label { font-size: 13px; }
 
-.auth-wrapper [data-amplify-router] {
-  border-radius: 16px;
-  overflow: hidden;
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+
+@media (pointer: coarse) {
+  button[data-size^="icon"], .aui-button-icon { min-width: 44px; min-height: 44px; }
 }

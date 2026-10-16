@@ -1,5 +1,6 @@
 import { ConversationMetadata, ConversationFull, ConversationUpdateBody, Message } from '@/types';
 import { getConversationApiEndpoint } from '@/services/config';
+import { readHistoryMessages } from './messageHistory';
 
 export class ConversationApiError extends Error {
   constructor(message: string, public statusCode: number) {
@@ -9,7 +10,8 @@ export class ConversationApiError extends Error {
 }
 
 async function apiFetch<T>(path: string, token: string, options?: RequestInit): Promise<T> {
-  const endpoint = getConversationApiEndpoint();
+  const endpoint = import.meta.env.DEV && import.meta.env.VITE_LOCAL_API === '1'
+    ? '/local-api' : getConversationApiEndpoint();
   const url = `${endpoint.replace(/\/$/, '')}${path}`;
 
   const response = await fetch(url, {
@@ -55,7 +57,8 @@ export async function getConversation(
   token: string,
   conversationId: string
 ): Promise<ConversationFull> {
-  return apiFetch<ConversationFull>(`/conversations/${conversationId}`, token);
+  const conversation = await apiFetch<ConversationFull>(`/conversations/${conversationId}`, token);
+  return { ...conversation, messages: readHistoryMessages(conversation.messages) };
 }
 
 export async function updateConversation(

@@ -1,204 +1,24 @@
-/* MarkdownRenderer styles using theme CSS custom properties */
-
-.container {
-  font-family: var(--font-family);
-  font-size: var(--font-size-body);
-  color: var(--color-text);
-  line-height: 1.6;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-}
-
-/* Headings — descending size hierarchy */
-.h1 {
-  font-size: 1.5em;
-  font-weight: 700;
-  margin: var(--space-3) 0 var(--space-1) 0;
-  line-height: 1.3;
-  color: var(--color-text);
-}
-
-.h2 {
-  font-size: 1.3em;
-  font-weight: 600;
-  margin: var(--space-2) 0 var(--space-1) 0;
-  line-height: 1.35;
-  color: var(--color-text);
-}
-
-.h3 {
-  font-size: 1.15em;
-  font-weight: 600;
-  margin: var(--space-2) 0 var(--space-1) 0;
-  line-height: 1.4;
-  color: var(--color-text);
-}
-
-.h4 {
-  font-size: 1em;
-  font-weight: 600;
-  margin: var(--space-2) 0 var(--space-1) 0;
-  line-height: 1.45;
-  color: var(--color-text);
-}
-
-.h5 {
-  font-size: 0.95em;
-  font-weight: 500;
-  margin: var(--space-1) 0;
-  line-height: 1.5;
-  color: var(--color-text-secondary);
-}
-
-.h6 {
-  font-size: 0.9em;
-  font-weight: 500;
-  margin: var(--space-1) 0;
-  line-height: 1.5;
-  color: var(--color-text-secondary);
-}
-
-/* Lists — consistent indentation per nesting level */
-.list {
-  margin: var(--space-1) 0;
-  padding-left: var(--space-3);
-}
-
-.list .list {
-  padding-left: var(--space-3);
-  margin: 0;
-}
-
-.list .list .list {
-  padding-left: var(--space-3);
-  margin: 0;
-}
-
-.list .list .list .list {
-  padding-left: var(--space-3);
-  margin: 0;
-}
-
-.list li {
-  margin-bottom: 4px;
-}
-
-/* Tables — alternating row backgrounds */
-.tableWrapper {
-  overflow-x: auto;
-  margin: var(--space-2) 0;
-  border-radius: var(--radius-md);
-  -webkit-overflow-scrolling: touch;
-}
-
-.table {
-  width: max-content;
-  min-width: 100%;
-  border-collapse: collapse;
-  font-size: 0.875em;
-  border: 1px solid var(--color-border);
-  table-layout: auto;
-}
-
-.table th {
-  background-color: #f3f4f6;
-  padding: var(--space-1) var(--space-2);
-  text-align: left;
-  font-weight: 600;
-  border-bottom: 2px solid var(--color-border);
-  white-space: nowrap;
-}
-
-.table td {
-  padding: var(--space-1) var(--space-2);
-  border-bottom: 1px solid var(--color-border);
-  white-space: nowrap;
-}
-
-.table tr:nth-child(even) {
-  background-color: #f9fafb;
-}
-
-.table tr:nth-child(odd) {
-  background-color: transparent;
-}
-
-/* Inline code — background tint, border-radius, monospace font */
-.inlineCode {
-  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-  font-size: 0.875em;
-  background-color: rgba(0, 0, 0, 0.06);
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  word-break: break-word;
-}
-
-/* Fenced code blocks */
-.codeBlock {
-  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-  font-size: 0.85em;
-  background-color: #1e1e2e;
-  color: #e2e8f0;
-  padding: var(--space-2);
-  border-radius: var(--radius-md);
-  overflow-x: auto;
-  margin: var(--space-2) 0;
-  line-height: 1.5;
-}
-
-.codeBlock code {
-  font-family: inherit;
-  font-size: inherit;
-}
-
-/* Links — primary color */
-.link {
-  color: var(--color-primary);
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 2px;
-  transition: color var(--transition-fast);
-}
-
-.link:hover {
-  color: var(--color-primary);
-  opacity: 0.8;
-}
-
-/* Fallback for rendering errors */
-.fallback {
-  white-space: pre-wrap;
-  font-family: var(--font-family);
-  color: var(--color-text);
-}
-
-/* Paragraph spacing within rendered markdown */
-.container p {
-  margin: var(--space-1) 0;
-}
-
-/* Blockquotes */
-.container blockquote {
-  margin: var(--space-2) 0;
-  padding: var(--space-1) var(--space-2);
-  border-left: 3px solid var(--color-primary);
-  background-color: rgba(0, 0, 0, 0.02);
-  color: var(--color-text-secondary);
-}
-
-/* Horizontal rules */
-.container hr {
-  border: none;
-  border-top: 1px solid var(--color-border);
-  margin: var(--space-3) 0;
-}
-
-/* Task lists (GFM) */
-.container input[type="checkbox"] {
-  margin-right: var(--space-1);
-}
-
-/* Strikethrough (GFM) */
-.container del {
-  color: var(--color-text-secondary);
-}
+.container { color: var(--foreground); font-size: 15px; line-height: 1.75; overflow-wrap: anywhere; }
+.container > :first-child { margin-top: 0; }
+.container > :last-child { margin-bottom: 0; }
+.h1, .h2, .h3, .h4, .h5, .h6 { font-weight: 600; line-height: 1.4; letter-spacing: -0.015em; margin: 1.5em 0 0.65em; color: var(--foreground); }
+.h1 { font-size: 1.4em; }
+.h2 { font-size: 1.2em; }
+.h3 { font-size: 1.05em; }
+.h4, .h5, .h6 { font-size: 1em; }
+.list { margin: 0.75em 0; padding-left: 1.5em; list-style: revert; }
+.list .list { margin: 0.3em 0; }
+.list li { margin: 0.35em 0; }
+.tableWrapper { overflow-x: auto; max-width: 100%; margin: 1.25em 0; }
+.table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th { font-weight: 600; background: var(--muted); }
+.table th, .table td { padding: 10px 14px; border-bottom: 1px solid var(--border); text-align: left; }
+.inlineCode { font-family: var(--font-mono); font-size: 0.85em; background: var(--muted); padding: 2px 5px; border-radius: 4px; }
+.link { color: var(--foreground); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--muted-foreground); }
+.link:hover { text-decoration-color: var(--foreground); }
+.fallback { white-space: pre-wrap; }
+.container p { margin: 0.85em 0; }
+.container blockquote { margin: 1em 0; padding: 0.25em 1em; border-left: 1px solid var(--border); color: var(--muted-foreground); }
+.container hr { border: 0; border-top: 1px solid var(--border); margin: 1.5em 0; }
+.container input[type="checkbox"] { margin-right: 8px; }
+.container del { color: var(--muted-foreground); }

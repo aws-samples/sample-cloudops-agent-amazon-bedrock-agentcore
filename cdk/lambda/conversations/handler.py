@@ -75,7 +75,7 @@ def handler(event, context):
     body = None
     if event.get('body'):
         try:
-            body = json.loads(event['body'])
+            body = json.loads(event['body'], parse_float=decimal.Decimal)
         except (json.JSONDecodeError, TypeError):
             body = {}
 
@@ -187,6 +187,125 @@ def get_conversation(user_id, conversation_id):
     })
 
 
+def bounded_text(value, maximum, minimum=0):
+    return isinstance(value, str) and minimum <= len(value) <= maximum
+
+
+def valid_presentation(preview):
+    """Validate the entire persisted projection, not just its renderer name."""
+    if not isinstance(preview, dict) or not bounded_text(preview.get('id'), 128, 1) or not bounded_text(preview.get('title'), 200):
+        return False
+    data = preview.get('data')
+    if not isinstance(data, list):
+        return False
+    if preview.get('kind') == 'table':
+        required = {'kind', 'id', 'title', 'columns', 'data'}
+        if not required <= set(preview) or set(preview) - required - {'emptyMessage'}:
+            return False
+        if 'emptyMessage' in preview and not bounded_text(preview['emptyMessage'], 200):
+            return False
+        columns = preview.get('columns')
+        if not isinstance(columns, list) or not 1 <= len(columns) <= 8 or len(data) > 50:
+            return False
+        keys = set()
+        for column in columns:
+            if not isinstance(column, dict) or set(column) != {'key', 'label'}:
+                return False
+            key = column['key']
+            if not isinstance(key, str) or not re.fullmatch(r'[a-zA-Z][a-zA-Z0-9_]{0,63}', key):
+                return False
+            if key in keys or key in ('constructor', 'prototype', '__proto__') or not bounded_text(column['label'], 200):
+                return False
+            keys.add(key)
+        return all(isinstance(row, dict) and set(row) <= keys and all(
+            cell is None or isinstance(cell, (bool, int)) or bounded_text(cell, 500)
+            or (isinstance(cell, decimal.Decimal) and cell.is_finite())
+            for cell in row.values()
+        ) for row in data)
+    if preview.get('kind') == 'chart':
+        if set(preview) != {'kind', 'id', 'title', 'unit', 'xKey', 'series', 'data'}:
+            return False
+        unit, series = preview.get('unit'), preview.get('series')
+        if not isinstance(unit, str) or not re.fullmatch(r'[A-Z]{3}', unit) or preview.get('xKey') != 'label':
+            return False
+        if not isinstance(series, list) or len(series) != 1 or not isinstance(series[0], dict):
+            return False
+        if set(series[0]) != {'key', 'label'} or series[0]['key'] != 'amount' or not bounded_text(series[0]['label'], 200):
+            return False
+        return 1 <= len(data) <= 30 and all(
+            isinstance(row, dict) and set(row) == {'label', 'amount'} and bounded_text(row['label'], 200)
+            and not isinstance(row['amount'], bool)
+            and (isinstance(row['amount'], int) or (isinstance(row['amount'], decimal.Decimal) and row['amount'].is_finite()))
+            for row in data
+        )
+    return False
+
+
+def valid_tool_output(output):
+    """Raw results are inert JSON text, never renderer configuration or code."""
+    if not isinstance(output, dict) or set(output) != {'json', 'redacted', 'truncated'}:
+        return False
+    if not bounded_text(output['json'], 24_000) or not all(isinstance(output[key], bool) for key in ('redacted', 'truncated')):
+        return False
+    def reject_constant(value):
+        raise ValueError('Non-finite JSON value')
+    try:
+        json.loads(output['json'], parse_constant=reject_constant)
+    except (ValueError, TypeError, RecursionError):
+        return False
+    return True
+
+
+def valid_message_batch(messages):
+    """Bound source-owned snapshots; old text-only messages remain supported."""
+    if len(messages) > 20 or len(json.dumps(messages, cls=DecimalEncoder).encode('utf-8')) > 100_000:
+        return False
+    for message in messages:
+        if not isinstance(message, dict) or not isinstance(message.get('content'), str):
+            return False
+        if message.get('role') not in ('user', 'agent') or not bounded_text(message.get('id'), 200, 1):
+            return False
+        if set(message) - {'id', 'role', 'content', 'timestamp', 'status', 'errorMessage', 'partsVersion', 'parts'}:
+            return False
+        timestamp = message.get('timestamp')
+        if isinstance(timestamp, bool) or not isinstance(timestamp, (int, decimal.Decimal)):
+            return False
+        if isinstance(timestamp, decimal.Decimal) and not timestamp.is_finite():
+            return False
+        if abs(timestamp) > 8_640_000_000_000_000:
+            return False
+        if message.get('status') not in ('sent', 'delivered', 'error', 'interrupted', 'restricted'):
+            return False
+        if 'errorMessage' in message and not bounded_text(message['errorMessage'], 2000):
+            return False
+        if 'parts' not in message:
+            continue
+        parts = message['parts']
+        if message.get('partsVersion') != 1 or not isinstance(parts, list) or len(parts) > 100:
+            return False
+        for part in parts:
+            if not isinstance(part, dict):
+                return False
+            if part.get('type') == 'text':
+                if set(part) != {'type', 'text'} or not isinstance(part.get('text'), str):
+                    return False
+            elif part.get('type') == 'tool':
+                if set(part) - {'type', 'toolCallId', 'toolName', 'status', 'presentation', 'output'}:
+                    return False
+                if not all(bounded_text(part.get(key), 200, 1) for key in ('toolCallId', 'toolName')):
+                    return False
+                if part.get('status') not in ('completed', 'failed', 'interrupted', 'blocked', 'unavailable'):
+                    return False
+                preview = part.get('presentation')
+                if preview is not None and not valid_presentation(preview):
+                    return False
+                if 'output' in part and not valid_tool_output(part['output']):
+                    return False
+            else:
+                return False
+    return True
+
+
 def update_conversation(user_id, conversation_id, body):
     """Update a conversation (rename and/or append messages)."""
     # Fetch existing item to verify ownership
@@ -221,6 +340,8 @@ def update_conversation(user_id, conversation_id, body):
     # Handle messages append
     if body and 'messages' in body and isinstance(body['messages'], list):
         new_messages = body['messages']
+        if not valid_message_batch(new_messages):
+            return json_response(400, {'message': 'Invalid or oversized conversation messages'})
         existing_messages = item.get('messages', [])
 
         # Auto-naming: if this is the first message being appended and current name
@@ -248,6 +369,8 @@ def update_conversation(user_id, conversation_id, body):
 
         # Append new messages to existing
         combined_messages = existing_messages + new_messages
+        if len(json.dumps(combined_messages, cls=DecimalEncoder).encode('utf-8')) > 330_000:
+            return json_response(413, {'message': 'Conversation history is full. Start a new conversation.'})
         update_expressions.append('messages = :messages')
         expression_attr_values[':messages'] = combined_messages
 
@@ -272,11 +395,16 @@ def update_conversation(user_id, conversation_id, body):
         'UpdateExpression': 'SET ' + ', '.join(update_expressions),
         'ExpressionAttributeValues': expression_attr_values,
         'ReturnValues': 'ALL_NEW',
+        # A late append must not resurrect a conversation deleted after our read.
+        'ConditionExpression': 'attribute_exists(conversationId)',
     }
     if expression_attr_names:
         update_kwargs['ExpressionAttributeNames'] = expression_attr_names
 
-    result = table.update_item(**update_kwargs)
+    try:
+        result = table.update_item(**update_kwargs)
+    except dynamodb.meta.client.exceptions.ConditionalCheckFailedException:
+        return json_response(404, {'message': 'Conversation not found'})
     updated_item = result.get('Attributes', {})
 
     return json_response(200, {

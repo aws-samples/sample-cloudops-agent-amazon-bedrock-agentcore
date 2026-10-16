@@ -29,6 +29,9 @@ targets in order:
                    the manual Amplify upload steps. CDK does not host the frontend.
   make config      Print the deployment's FrontEndConfig and map each value to
                    the app's Settings controls.
+  make dev         Run the new UI, AgentCore entrypoint, and disposable local
+                   history at http://127.0.0.1:5173 using existing AWS services.
+                   No deployment; model/tool calls incur normal AWS charges.
 
 Still manual (by design):
   - Enabling the Bedrock model and CloudWatch Transaction Search (account-level).

@@ -62,6 +62,14 @@ function conversationReducer(
             : c
         ),
       };
+    case 'UPDATE_METADATA':
+      return {
+        ...state,
+        conversations: state.conversations.map(conversation =>
+          conversation.conversationId === action.payload.conversationId
+            ? { ...conversation, ...action.payload } : conversation
+        ),
+      };
     case 'SET_LOADING_LIST':
       return { ...state, isLoadingList: action.payload };
     case 'SET_LOADING_CONVERSATION':
@@ -90,6 +98,7 @@ export interface ConversationContextValue {
   renameConversation: (id: string, name: string) => Promise<void>;
   deleteConversation: (id: string) => Promise<string | null>;
   saveMessages: (messages: Message[]) => Promise<void>;
+  receiveSavedConversation: (conversation: ConversationMetadata) => void;
 }
 
 const ConversationContext = createContext<ConversationContextValue | undefined>(undefined);
@@ -220,6 +229,11 @@ export function ConversationProvider({ children }: { children: React.ReactNode }
     }
   }, [state.activeConversationId]);
 
+  const receiveSavedConversation = useCallback((conversation: ConversationMetadata) => {
+    const { conversationId, conversationName, createdAt, updatedAt } = conversation;
+    dispatch({ type: 'UPDATE_METADATA', payload: { conversationId, conversationName, createdAt, updatedAt } });
+  }, []);
+
   const value: ConversationContextValue = {
     conversations: state.conversations,
     activeConversationId: state.activeConversationId,
@@ -233,6 +247,7 @@ export function ConversationProvider({ children }: { children: React.ReactNode }
     renameConversation,
     deleteConversation: deleteConversationFn,
     saveMessages,
+    receiveSavedConversation,
   };
 
   return (

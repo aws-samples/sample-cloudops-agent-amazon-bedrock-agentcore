@@ -23,7 +23,7 @@
 
 MK := scripts/make
 
-.PHONY: help check plan deploy frontend config
+.PHONY: help check plan deploy frontend config dev
 
 # Default, non-mutating: print the workflow and remaining manual steps.
 help:
@@ -53,3 +53,7 @@ frontend:
 # Settings controls (including the history endpoint).
 config:
 	@bash $(MK)/config.sh
+
+# Local UI + AgentCore + disposable history; uses existing AWS services, no deploy.
+dev:
+	@bash $(MK)/dev.sh
