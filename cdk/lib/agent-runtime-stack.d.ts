@@ -1,7 +1,7 @@
-import * as cdk from 'aws-cdk-lib';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import * as ecr from 'aws-cdk-lib/aws-ecr';
-import { Construct } from 'constructs';
+import * as cdk from "aws-cdk-lib";
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as ecr from "aws-cdk-lib/aws-ecr";
+import { Construct } from "constructs";
 export interface AgentRuntimeStackProps extends cdk.StackProps {
     repository: ecr.IRepository;
     userPoolArn: string;

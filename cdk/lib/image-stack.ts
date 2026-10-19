@@ -10,6 +10,21 @@ import * as crypto from 'crypto';
 import * as path from 'path';
 import { NagSuppressions } from 'cdk-nag';
 
+// Local-only build artifacts that must never enter a CodeBuild source asset.
+// A developer `uv sync` leaves a ~60 MB / 3.7k-file .venv in the source tree;
+// BucketDeployment then uploads it object-by-object and times out. Same list
+// as scripts/make/plan-hash.sh. Bare names match at any depth and prune the
+// whole directory; `dir/**` would not, because `**` skips dotfiles such as
+// .venv/.gitignore.
+export const LOCAL_ARTIFACTS = [
+  'node_modules',
+  '.venv',
+  '__pycache__',
+  '.pytest_cache',
+  '.hypothesis',
+  '*.pyc',
+];
+
 /**
  * ImageStack: Builds Docker images for MCP server runtimes using the
  * stdio-to-HTTP patching pattern.
@@ -125,7 +140,7 @@ export class ImageStack extends cdk.Stack {
 
     // Upload codebuild-scripts to S3
     const scriptsDeployment = new s3deploy.BucketDeployment(this, 'CodeBuildScriptsDeployment', {
-      sources: [s3deploy.Source.asset(path.join(__dirname, '../../codebuild-scripts'))],
+      sources: [s3deploy.Source.asset(path.join(__dirname, '../../codebuild-scripts'), { exclude: LOCAL_ARTIFACTS })],
       destinationBucket: this.sourceBucket,
       destinationKeyPrefix: 'codebuild-scripts/',
       extract: true,
@@ -136,14 +151,14 @@ export class ImageStack extends cdk.Stack {
 
     // Also upload agentcore directory for main runtime build
     const agentcoreDeployment = new s3deploy.BucketDeployment(this, 'AgentcoreSourceDeployment', {
-      sources: [s3deploy.Source.asset(path.join(__dirname, '../../agentcore'))],
+      sources: [s3deploy.Source.asset(path.join(__dirname, '../../agentcore'), { exclude: LOCAL_ARTIFACTS })],
       destinationBucket: this.sourceBucket,
       destinationKeyPrefix: 'agentcore/',
     });
 
     // Upload inventory MCP server source to S3
     const inventorySourceDeployment = new s3deploy.BucketDeployment(this, 'InventorySourceDeployment', {
-      sources: [s3deploy.Source.asset(path.join(__dirname, '../../mcp-servers/inventory'))],
+      sources: [s3deploy.Source.asset(path.join(__dirname, '../../mcp-servers/inventory'), { exclude: LOCAL_ARTIFACTS })],
       destinationBucket: this.sourceBucket,
       destinationKeyPrefix: 'inventory/',
     });

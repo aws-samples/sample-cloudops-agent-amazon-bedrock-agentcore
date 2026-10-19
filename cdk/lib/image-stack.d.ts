@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+export declare const LOCAL_ARTIFACTS: string[];
 /**
  * ImageStack: Builds Docker images for MCP server runtimes using the
  * stdio-to-HTTP patching pattern.
